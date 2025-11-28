@@ -137,7 +137,9 @@ ob_start();
         <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
             <p class="text-gray-600">No strategic goals have been added to this plan yet.</p>
             <?php if (isOrganizationAdmin()): ?>
-                <?= DesignSystem::button('Create Your First Goal', '/goals/new?plan_id=' . $plan['id'], 'primary', ['class' => 'mt-4']) ?>
+                <a href="/goals/new?plan_id=<?= $plan['id'] ?>" class="inline-block mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                    Create Your First Goal
+                </a>
             <?php endif; ?>
         </div>
     <?php else: ?>
@@ -162,10 +164,12 @@ ob_start();
                             </div>
                         <?php endif; ?>
                         <div class="text-sm text-gray-600 mb-4">
+                            <?php if (!empty($goal['responsible_director'])): ?>
                             <div class="mb-2">
                                 <dt class="inline font-medium">Responsible Senior manager:</dt>
                                 <dd class="inline"> <?= h($goal['responsible_director']) ?></dd>
                             </div>
+                            <?php endif; ?>
                             <div>
                                 <dt class="inline font-medium">Projects:</dt>
                                 <dd class="inline"> <?= count($projectsByGoal[$goal['id']] ?? []) ?> <?= pluralize(count($projectsByGoal[$goal['id']] ?? []), 'project') ?></dd>

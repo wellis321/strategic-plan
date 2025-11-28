@@ -81,7 +81,7 @@ class Goal {
                 'number' => $data['number'],
                 'title' => $data['title'],
                 'description' => $data['description'] ?? '',
-                'responsible_director' => $data['responsible_director'],
+                'responsible_director' => $data['responsible_director'] ?? null,
                 'created_by' => $data['created_by'] ?? null
             ];
 
@@ -118,7 +118,7 @@ class Goal {
                 'number' => $data['number'],
                 'title' => $data['title'],
                 'description' => $data['description'] ?? '',
-                'responsible_director' => $data['responsible_director']
+                'responsible_director' => $data['responsible_director'] ?? null
             ];
 
             $this->db->update('goals', $goalData, 'id = :id', ['id' => $id]);
@@ -178,14 +178,26 @@ class Goal {
             $errors['title'] = 'Title is required';
         }
 
-        if (empty($data['responsible_director'])) {
-            $errors['responsible_director'] = 'Responsible Senior manager is required';
-        }
+        // Responsible Senior manager is optional
+        // No validation needed - can be empty
 
-        // Check for duplicate number (if creating new or changing number)
+        // Check for duplicate number within the same plan (if creating new or changing number)
         if (!empty($data['number'])) {
             $sql = "SELECT id FROM goals WHERE number = :number";
             $params = ['number' => $data['number']];
+
+            // Check within the same plan if plan_id is provided
+            if (!empty($data['plan_id'])) {
+                $sql .= " AND plan_id = :plan_id";
+                $params['plan_id'] = $data['plan_id'];
+            } else {
+                // If no plan_id, check for goals with NULL plan_id in the same organization
+                // This handles backwards compatibility with old goals that don't have a plan_id
+                if (!empty($data['organization_id'])) {
+                    $sql .= " AND organization_id = :organization_id AND (plan_id IS NULL OR plan_id = 0)";
+                    $params['organization_id'] = $data['organization_id'];
+                }
+            }
 
             if (isset($data['id'])) {
                 $sql .= " AND id != :id";
@@ -194,7 +206,7 @@ class Goal {
 
             $existing = $this->db->fetchOne($sql, $params);
             if ($existing) {
-                $errors['number'] = 'Goal number already exists';
+                $errors['number'] = 'Goal number already exists in this plan';
             }
         }
 

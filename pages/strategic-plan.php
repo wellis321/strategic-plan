@@ -48,7 +48,8 @@ $planId = $activePlan ? $activePlan['id'] : null;
 $sections = $planId ? $sectionModel->getAll(['plan_id' => $planId]) : [];
 $goals = $planId ? $goalModel->getAll(['plan_id' => $planId]) : [];
 $projects = $planId ? $projectModel->getAll(['plan_id' => $planId]) : [];
-$topSections = $topSectionModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);
+// Get top sections for this plan (plan-specific + organization-wide)
+$topSections = $planId ? $topSectionModel->getAll(['organization_id' => $organizationId, 'plan_id' => $planId, 'is_active' => true]) : [];
 
 // Group projects by goal
 $projectsByGoal = [];
@@ -97,23 +98,29 @@ ob_start();
         </div>
     </header>
 
-<?php
-$showHero = !empty($organization['show_hero']);
-$showAbout = !empty($organization['show_about']);
-$showVision = !empty($organization['show_vision']);
-$showMission = !empty($organization['show_mission']);
-$showValues = !empty($organization['show_values']);
-$hasHeroContent = $showHero && (!empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']));
-$heroHeight = $organization['hero_image_height'] ?? 'medium';
-$heroHeightClass = [
-    'short' => 'h-52',
-    'tall' => 'h-80'
-][$heroHeight] ?? 'h-64';
-$heroBgStart = $organization['hero_bg_start'] ?? '#1D4ED8';
-$heroBgEnd = $organization['hero_bg_end'] ?? '#9333EA';
-$heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$heroBgEnd});";
-?>
-    <?php if ($hasHeroContent): ?>
+    <?php
+    $showHero = !empty($organization['show_hero']);
+    $showAbout = !empty($organization['show_about']);
+    $showVision = !empty($organization['show_vision']);
+    $showMission = !empty($organization['show_mission']);
+    $showValues = !empty($organization['show_values']);
+    $hasHeroContent = $showHero && (!empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']));
+
+    // Only show organization hero if there are no custom top sections for this plan
+    // This allows plans to have their own custom sections without the org hero appearing
+    $hasCustomSections = !empty($topSections);
+    $shouldShowOrgHero = $hasHeroContent && !$hasCustomSections;
+
+    $heroHeight = $organization['hero_image_height'] ?? 'medium';
+    $heroHeightClass = [
+        'short' => 'h-52',
+        'tall' => 'h-80'
+    ][$heroHeight] ?? 'h-64';
+    $heroBgStart = $organization['hero_bg_start'] ?? '#1D4ED8';
+    $heroBgEnd = $organization['hero_bg_end'] ?? '#9333EA';
+    $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$heroBgEnd});";
+    ?>
+    <?php if ($shouldShowOrgHero): ?>
         <div class="relative rounded-lg overflow-hidden mb-8 shadow-lg" style="<?= h($heroGradientStyle) ?>">
             <div class="absolute inset-0 bg-black/30"></div>
             <div class="relative p-8 md:p-12 text-white">
@@ -392,10 +399,12 @@ $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$he
                         </div>
                         " : "") . "
                         <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata' : 'text-sm text-gray-600 mb-4') . "'>
+                            " . (!empty($goal['responsible_director']) ? "
                             <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : 'mb-2') . "'>
                                 <dt>Responsible Senior manager</dt>
                                 <dd>" . h($goal['responsible_director']) . "</dd>
                             </div>
+                            " : "") . "
                             <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : '') . "'>
                                 <dt>Projects</dt>
                                 <dd>" . count($goalProjects) . " " . pluralize(count($goalProjects), 'project') . "</dd>

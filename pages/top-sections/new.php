@@ -3,11 +3,16 @@
 requireOrganizationAdmin();
 
 $topSectionModel = new OrganizationTopSection();
+$planModel = new StrategicPlan();
 $currentUser = getCurrentUser();
 $organizationId = $currentUser['organization_id'];
 
+// Get all plans for this organization
+$allPlans = $planModel->getAll(['organization_id' => $organizationId]);
+
 $errors = [];
 $formData = [
+    'plan_id' => '',
     'section_type' => 'custom',
     'title' => '',
     'content' => '',
@@ -34,6 +39,7 @@ if (isPost()) {
 
         $formData = [
             'organization_id' => $organizationId,
+            'plan_id' => !empty($postData['plan_id']) && $postData['plan_id'] !== '' ? (int)$postData['plan_id'] : null,
             'section_type' => $postData['section_type'] ?? 'custom',
             'title' => trim($postData['title'] ?? ''),
             'content' => sanitizeRichText($postData['content'] ?? ''),
@@ -112,6 +118,23 @@ ob_start();
         <?= csrfField() ?>
 
         <div class="bg-white shadow rounded-lg p-6 mb-6 space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="plan_id">Assign to Plan</label>
+                <select
+                    id="plan_id"
+                    name="plan_id"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="" <?= empty($formData['plan_id']) ? 'selected' : '' ?>>All Plans (Organization-wide)</option>
+                    <?php foreach ($allPlans as $plan): ?>
+                        <option value="<?= $plan['id'] ?>" <?= $formData['plan_id'] == $plan['id'] ? 'selected' : '' ?>>
+                            <?= h($plan['title']) ?> (<?= h($plan['status']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">Select a specific plan or leave as "All Plans" to show on every plan.</p>
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1" for="section_type">Section Type</label>
                 <select

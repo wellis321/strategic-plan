@@ -15,6 +15,15 @@ class OrganizationTopSection {
             $params['organization_id'] = $filters['organization_id'];
         }
 
+        if (isset($filters['plan_id'])) {
+            // If plan_id is specified, show sections for that plan OR organization-wide sections (plan_id IS NULL)
+            $sql .= " AND (plan_id = :plan_id OR plan_id IS NULL)";
+            $params['plan_id'] = $filters['plan_id'];
+        } elseif (isset($filters['plan_id_null'])) {
+            // Explicitly filter for organization-wide sections only
+            $sql .= " AND plan_id IS NULL";
+        }
+
         if (isset($filters['is_active'])) {
             $sql .= " AND is_active = :is_active";
             $params['is_active'] = $filters['is_active'] ? 1 : 0;
@@ -40,6 +49,7 @@ class OrganizationTopSection {
     public function create($data) {
         $sectionData = [
             'organization_id' => $data['organization_id'],
+            'plan_id' => !empty($data['plan_id']) ? (int)$data['plan_id'] : null,
             'section_type' => $data['section_type'] ?? 'custom',
             'title' => $data['title'] ?? null,
             'content' => $data['content'] ?? null,
@@ -57,6 +67,7 @@ class OrganizationTopSection {
 
     public function update($id, $data, $organizationId = null) {
         $sectionData = [
+            'plan_id' => isset($data['plan_id']) && $data['plan_id'] !== '' ? (int)$data['plan_id'] : null,
             'section_type' => $data['section_type'] ?? 'custom',
             'title' => $data['title'] ?? null,
             'content' => $data['content'] ?? null,

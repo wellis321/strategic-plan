@@ -70,23 +70,25 @@ if (isPost()) {
             }
         }
 
+        // Set organization and plan_id BEFORE validation (needed for duplicate number check)
+        $currentUser = getCurrentUser();
+        $formData['organization_id'] = $currentUser['organization_id'];
+
+        // Get active plan for this organization or use plan_id from query parameter
+        $planModel = new StrategicPlan();
+        $activePlans = $planModel->getAll(['organization_id' => $currentUser['organization_id'], 'is_active' => true]);
+        if (!empty($activePlans)) {
+            $formData['plan_id'] = $activePlans[0]['id'];
+        } elseif (!empty(getQueryParam('plan_id'))) {
+            $formData['plan_id'] = getQueryParam('plan_id');
+        }
+
         $errors = $goalModel->validate($formData);
 
         if (empty($errors)) {
             try {
-                // Set organization and creator
-                $currentUser = getCurrentUser();
-                $formData['organization_id'] = $currentUser['organization_id'];
+                // Set creator
                 $formData['created_by'] = $currentUser['id'];
-
-                // Get active plan for this organization
-                $planModel = new StrategicPlan();
-                $activePlans = $planModel->getAll(['organization_id' => $currentUser['organization_id'], 'is_active' => true]);
-                if (!empty($activePlans)) {
-                    $formData['plan_id'] = $activePlans[0]['id'];
-                } elseif (!empty(getQueryParam('plan_id'))) {
-                    $formData['plan_id'] = getQueryParam('plan_id');
-                }
 
                 $goalId = $goalModel->create($formData);
                 setFlashMessage('success', 'Goal created successfully!');
@@ -171,15 +173,16 @@ ob_start();
                 </div>
 
                 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question' : 'md:col-span-2' ?>">
-                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="responsible_director">Responsible Senior manager *</label>
+                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="responsible_director">Responsible Senior manager</label>
                     <input
                         type="text"
                         id="responsible_director"
                         name="responsible_director"
                         value="<?= h($formData['responsible_director'] ?? '') ?>"
                         class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_input' : 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500' ?> <?= !empty($errors['responsible_director']) ? (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_input--error' : 'border-red-500') : '' ?>"
-                        required
+                        placeholder="Optional - e.g., Director of Operations"
                     >
+                    <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_hint-text' : 'mt-1 text-sm text-gray-500' ?>">Leave blank if your organisation doesn't use this field.</p>
                     <?php if (!empty($errors['responsible_director'])): ?>
                         <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question__error-message' : 'mt-1 text-sm text-red-600' ?>"><?= h($errors['responsible_director']) ?></p>
                     <?php endif; ?>

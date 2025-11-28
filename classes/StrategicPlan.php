@@ -59,19 +59,25 @@ class StrategicPlan {
         return $this->db->fetchOne($sql, $params);
     }
 
-    public function getBySlug($organizationSlug, $planSlug) {
+    public function getBySlug($organizationSlug, $planSlug, $requirePublished = true) {
         $sql = "SELECT sp.*,
                 o.name as organization_name,
                 o.domain as organization_domain,
                 o.slug as organization_slug
                 FROM strategic_plans sp
                 INNER JOIN organizations o ON sp.organization_id = o.id
-                WHERE o.slug = :organization_slug AND sp.slug = :plan_slug AND sp.status = 'published'";
+                WHERE o.slug = :organization_slug AND sp.slug = :plan_slug";
 
-        return $this->db->fetchOne($sql, [
+        $params = [
             'organization_slug' => $organizationSlug,
             'plan_slug' => $planSlug
-        ]);
+        ];
+
+        if ($requirePublished) {
+            $sql .= " AND sp.status = 'published'";
+        }
+
+        return $this->db->fetchOne($sql, $params);
     }
 
     public function create($data) {

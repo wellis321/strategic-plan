@@ -18,8 +18,9 @@ if (!$orgSlug || !$planSlug) {
     exit;
 }
 
-// Get the plan
-$plan = $planModel->getBySlug($orgSlug, $planSlug);
+// Get the plan (allow draft plans to be viewed publicly for now)
+// TODO: Add proper access control - maybe require login for draft plans
+$plan = $planModel->getBySlug($orgSlug, $planSlug, false);
 
 if (!$plan) {
     http_response_code(404);
@@ -34,7 +35,8 @@ $organization = $orgModel->getByIdWithValues($plan['organization_id']);
 $goals = $goalModel->getAll(['plan_id' => $plan['id']]);
 $projects = $projectModel->getAll(['plan_id' => $plan['id']]);
 $sections = $sectionModel->getAll(['plan_id' => $plan['id']]);
-$topSections = $topSectionModel->getAll(['organization_id' => $plan['organization_id'], 'is_active' => true]);
+// Get top sections for this plan (plan-specific + organization-wide)
+$topSections = $topSectionModel->getAll(['organization_id' => $plan['organization_id'], 'plan_id' => $plan['id'], 'is_active' => true]);
 
 // Group projects by goal
 $projectsByGoal = [];
@@ -51,6 +53,23 @@ ob_start();
 ?>
 
 <div class="mb-8">
+    <?php if ($plan['status'] === 'draft'): ?>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-800">
+                        <strong>Draft Plan:</strong> This strategic plan is currently in draft status and may be incomplete or subject to change.
+                    </p>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <header class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900"><?= h($plan['title']) ?></h1>
         <p class="mt-2 text-gray-600">
@@ -74,6 +93,12 @@ ob_start();
     $showMission = !empty($organization['show_mission']);
     $showValues = !empty($organization['show_values']);
     $hasHeroContent = $showHero && (!empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']));
+
+    // Only show organization hero if there are no custom top sections for this plan
+    // This allows plans to have their own custom sections without the org hero appearing
+    $hasCustomSections = !empty($topSections);
+    $shouldShowOrgHero = $hasHeroContent && !$hasCustomSections;
+
     $heroHeight = $organization['hero_image_height'] ?? 'medium';
     $heroHeightClass = [
         'short' => 'h-52',
@@ -83,7 +108,7 @@ ob_start();
     $heroBgEnd = $organization['hero_bg_end'] ?? '#9333EA';
     $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$heroBgEnd});";
     ?>
-    <?php if ($hasHeroContent): ?>
+    <?php if ($shouldShowOrgHero): ?>
         <div class="relative rounded-lg overflow-hidden mb-8 shadow-lg" style="<?= h($heroGradientStyle) ?>">
             <div class="absolute inset-0 bg-black/30"></div>
             <div class="relative p-8 md:p-12 text-white">
@@ -341,10 +366,12 @@ ob_start();
                             </div>
                         <?php endif; ?>
                         <div class="text-sm text-gray-600 mb-4">
+                            <?php if (!empty($goal['responsible_director'])): ?>
                             <div class="mb-2">
                                 <dt class="inline font-medium">Responsible Senior manager:</dt>
                                 <dd class="inline"> <?= h($goal['responsible_director']) ?></dd>
                             </div>
+                            <?php endif; ?>
                             <div>
                                 <dt class="inline font-medium">Projects:</dt>
                                 <dd class="inline"> <?= count($projectsByGoal[$goal['id']] ?? []) ?> <?= pluralize(count($projectsByGoal[$goal['id']] ?? []), 'project') ?></dd>

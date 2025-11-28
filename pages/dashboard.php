@@ -157,10 +157,12 @@ ob_start();
                         <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : 'mb-4') . "'>
                             <p class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-3' : 'mb-3') . "'>" . h($goal['description']) . "</p>
                             <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata' : 'text-sm text-gray-600') . "'>
+                                " . (!empty($goal['responsible_director']) ? "
                                 <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : 'mb-2') . "'>
                                     <dt>Responsible Senior manager</dt>
                                     <dd>" . h($goal['responsible_director']) . "</dd>
                                 </div>
+                                " : "") . "
                                 <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : '') . "'>
                                     <dt>Projects</dt>
                                     <dd>{$projectCount} " . pluralize($projectCount, 'project') . "</dd>

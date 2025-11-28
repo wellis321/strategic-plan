@@ -93,6 +93,10 @@ if (isPost()) {
             }
         }
 
+        // Include plan_id and organization_id for validation (duplicate number check)
+        $formData['plan_id'] = $goal['plan_id'] ?? null;
+        $formData['organization_id'] = $goal['organization_id'] ?? $organizationId;
+
         $errors = $goalModel->validate($formData);
 
         if (empty($errors)) {
@@ -168,15 +172,16 @@ ob_start();
                 </div>
 
                 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question' : 'md:col-span-2' ?>">
-                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="responsible_director">Responsible Senior manager *</label>
+                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="responsible_director">Responsible Senior manager</label>
                     <input
                         type="text"
                         id="responsible_director"
                         name="responsible_director"
                         value="<?= h($formData['responsible_director'] ?? '') ?>"
                         class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_input' : 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500' ?>"
-                        required
+                        placeholder="Optional - e.g., Director of Operations"
                     >
+                    <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_hint-text' : 'mt-1 text-sm text-gray-500' ?>">Leave blank if your organisation doesn't use this field.</p>
                 </div>
 
                 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question' : 'md:col-span-2' ?>">

@@ -66,15 +66,23 @@ ob_start();
     </header>
 
     <?php
-    $hasHeroContent = !empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']);
+    $showHero = !empty($organization['show_hero']);
+    $showAbout = !empty($organization['show_about']);
+    $showVision = !empty($organization['show_vision']);
+    $showMission = !empty($organization['show_mission']);
+    $showValues = !empty($organization['show_values']);
+    $hasHeroContent = $showHero && (!empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']));
     $heroHeight = $organization['hero_image_height'] ?? 'medium';
     $heroHeightClass = [
         'short' => 'h-52',
         'tall' => 'h-80'
     ][$heroHeight] ?? 'h-64';
+    $heroBgStart = $organization['hero_bg_start'] ?? '#1D4ED8';
+    $heroBgEnd = $organization['hero_bg_end'] ?? '#9333EA';
+    $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$heroBgEnd});";
     ?>
     <?php if ($hasHeroContent): ?>
-        <div class="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 rounded-lg overflow-hidden mb-8 shadow-lg">
+        <div class="relative rounded-lg overflow-hidden mb-8 shadow-lg" style="<?= h($heroGradientStyle) ?>">
             <div class="absolute inset-0 bg-black/30"></div>
             <div class="relative p-8 md:p-12 text-white">
                 <h2 class="text-3xl font-bold mb-3"><?= h($organization['hero_title'] ?? ($plan['title'] ?? 'Strategic Plan')) ?></h2>
@@ -90,38 +98,38 @@ ob_start();
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($organization['about_us']) || !empty($organization['vision']) || !empty($organization['mission']) || !empty($organization['values'])): ?>
+    <?php if (($showAbout && !empty($organization['about_us'])) || ($showVision && !empty($organization['vision'])) || ($showMission && !empty($organization['mission'])) || ($showValues && !empty($organization['values']))): ?>
         <!-- About Us, Vision, Mission, Values Section -->
         <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
             <div class="md:flex">
-                <?php if (!empty($organization['about_image_path'])): ?>
+                <?php if ($showAbout && !empty($organization['about_image_path'])): ?>
                     <div class="md:w-1/3">
                         <img src="<?= asset($organization['about_image_path']) ?>" alt="About our organisation" class="w-full h-full object-cover">
                     </div>
                 <?php endif; ?>
-                <div class="<?= !empty($organization['about_image_path']) ? 'md:w-2/3' : 'w-full' ?> p-6 md:p-8 space-y-6">
-                    <?php if (!empty($organization['about_us'])): ?>
+                <div class="<?= ($showAbout && !empty($organization['about_image_path'])) ? 'md:w-2/3' : 'w-full' ?> p-6 md:p-8 space-y-6">
+                    <?php if ($showAbout && !empty($organization['about_us'])): ?>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 mb-2">About Us</h2>
                             <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['about_us']) ?></div>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!empty($organization['vision'])): ?>
+                    <?php if ($showVision && !empty($organization['vision'])): ?>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Vision</h2>
                             <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['vision']) ?></div>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!empty($organization['mission'])): ?>
+                    <?php if ($showMission && !empty($organization['mission'])): ?>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Mission</h2>
                             <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['mission']) ?></div>
                         </div>
                     <?php endif; ?>
 
-                    <?php if (!empty($organization['values'])): ?>
+                    <?php if ($showValues && !empty($organization['values'])): ?>
                         <div>
                             <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Values</h2>
                             <ul class="list-disc list-inside space-y-2 text-gray-700">

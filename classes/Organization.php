@@ -48,6 +48,13 @@ class Organization {
             'hero_subtitle' => $data['hero_subtitle'] ?? null,
             'hero_image_path' => $data['hero_image_path'] ?? null,
             'hero_image_height' => $data['hero_image_height'] ?? 'medium',
+            'hero_bg_start' => $data['hero_bg_start'] ?? '#1d4ed8',
+            'hero_bg_end' => $data['hero_bg_end'] ?? '#9333ea',
+            'show_hero' => !empty($data['show_hero']) ? 1 : 0,
+            'show_about' => !empty($data['show_about']) ? 1 : 0,
+            'show_vision' => !empty($data['show_vision']) ? 1 : 0,
+            'show_mission' => !empty($data['show_mission']) ? 1 : 0,
+            'show_values' => !empty($data['show_values']) ? 1 : 0,
             'about_image_path' => $data['about_image_path'] ?? null,
             'created_by' => $data['created_by'] ?? null
         ];
@@ -83,6 +90,13 @@ class Organization {
             'hero_subtitle' => array_key_exists('hero_subtitle', $data) ? $data['hero_subtitle'] : $current['hero_subtitle'],
             'hero_image_path' => array_key_exists('hero_image_path', $data) ? $data['hero_image_path'] : $current['hero_image_path'],
             'hero_image_height' => array_key_exists('hero_image_height', $data) ? ($data['hero_image_height'] ?: 'medium') : ($current['hero_image_height'] ?? 'medium'),
+            'hero_bg_start' => array_key_exists('hero_bg_start', $data) ? ($data['hero_bg_start'] ?: '#1d4ed8') : ($current['hero_bg_start'] ?? '#1d4ed8'),
+            'hero_bg_end' => array_key_exists('hero_bg_end', $data) ? ($data['hero_bg_end'] ?: '#9333ea') : ($current['hero_bg_end'] ?? '#9333ea'),
+            'show_hero' => array_key_exists('show_hero', $data) ? (int)!empty($data['show_hero']) : (int)($current['show_hero'] ?? 0),
+            'show_about' => array_key_exists('show_about', $data) ? (int)!empty($data['show_about']) : (int)($current['show_about'] ?? 0),
+            'show_vision' => array_key_exists('show_vision', $data) ? (int)!empty($data['show_vision']) : (int)($current['show_vision'] ?? 0),
+            'show_mission' => array_key_exists('show_mission', $data) ? (int)!empty($data['show_mission']) : (int)($current['show_mission'] ?? 0),
+            'show_values' => array_key_exists('show_values', $data) ? (int)!empty($data['show_values']) : (int)($current['show_values'] ?? 0),
             'about_image_path' => array_key_exists('about_image_path', $data) ? $data['about_image_path'] : $current['about_image_path']
         ];
 

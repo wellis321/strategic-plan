@@ -91,11 +91,31 @@ if (isPost()) {
         $formData['status'] = $organization['status']; // Preserve status
         // Handle values array
         $formData['values'] = $postData['values'] ?? [];
+        $formData['show_hero'] = !empty($postData['show_hero']) ? 1 : 0;
+        $formData['show_about'] = !empty($postData['show_about']) ? 1 : 0;
+        $formData['show_vision'] = !empty($postData['show_vision']) ? 1 : 0;
+        $formData['show_mission'] = !empty($postData['show_mission']) ? 1 : 0;
+        $formData['show_values'] = !empty($postData['show_values']) ? 1 : 0;
         $formData['hero_title'] = trim($postData['hero_title'] ?? '') ?: null;
         $formData['hero_subtitle'] = trim($postData['hero_subtitle'] ?? '') ?: null;
         $formData['hero_image_height'] = in_array($postData['hero_image_height'] ?? 'medium', ['short','medium','tall'], true)
             ? $postData['hero_image_height']
             : 'medium';
+        $defaultStart = $organization['hero_bg_start'] ?? '#1d4ed8';
+        $defaultEnd = $organization['hero_bg_end'] ?? '#9333ea';
+        $colorPattern = '/^#([A-Fa-f0-9]{6})$/';
+        $heroBgStart = strtoupper(trim($postData['hero_bg_start'] ?? $defaultStart));
+        $heroBgEnd = strtoupper(trim($postData['hero_bg_end'] ?? $defaultEnd));
+        if (!preg_match($colorPattern, $heroBgStart)) {
+            $errors['hero_bg_start'] = 'Hero start colour must be a valid hex value (e.g., #1D4ED8).';
+            $heroBgStart = $defaultStart;
+        }
+        if (!preg_match($colorPattern, $heroBgEnd)) {
+            $errors['hero_bg_end'] = 'Hero end colour must be a valid hex value (e.g., #9333EA).';
+            $heroBgEnd = $defaultEnd;
+        }
+        $formData['hero_bg_start'] = $heroBgStart;
+        $formData['hero_bg_end'] = $heroBgEnd;
         // Sanitize rich text fields
         if (isset($postData['about_us'])) {
             $formData['about_us'] = sanitizeRichText($postData['about_us']);
@@ -163,6 +183,10 @@ ob_start();
                     This content appears at the very top of your strategic plan. Use it to create a strong first impression.
                 </p>
             </div>
+            <label class="flex items-center space-x-2 text-sm text-gray-700">
+                <input type="checkbox" name="show_hero" value="1" <?= !empty($formData['show_hero']) ? 'checked' : '' ?> class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                <span>Show hero section on plan pages</span>
+            </label>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1" for="hero_title">Hero Title</label>
                 <input
@@ -221,11 +245,45 @@ ob_start();
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Choose how tall the hero image appears on the plan pages.</p>
             </div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="hero_bg_start">Hero Gradient Start Colour</label>
+                    <input
+                        type="color"
+                        id="hero_bg_start"
+                        name="hero_bg_start"
+                        value="<?= h($formData['hero_bg_start'] ?? '#1d4ed8') ?>"
+                        class="w-24 h-10 border border-gray-300 rounded-md cursor-pointer"
+                    >
+                    <p class="mt-1 text-sm text-gray-500">Select the first colour in the gradient.</p>
+                    <?php if (!empty($errors['hero_bg_start'])): ?>
+                        <p class="mt-1 text-sm text-red-600"><?= h($errors['hero_bg_start']) ?></p>
+                    <?php endif; ?>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="hero_bg_end">Hero Gradient End Colour</label>
+                    <input
+                        type="color"
+                        id="hero_bg_end"
+                        name="hero_bg_end"
+                        value="<?= h($formData['hero_bg_end'] ?? '#9333ea') ?>"
+                        class="w-24 h-10 border border-gray-300 rounded-md cursor-pointer"
+                    >
+                    <p class="mt-1 text-sm text-gray-500">Select the second colour in the gradient.</p>
+                    <?php if (!empty($errors['hero_bg_end'])): ?>
+                        <p class="mt-1 text-sm text-red-600"><?= h($errors['hero_bg_end']) ?></p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <div class="bg-white shadow rounded-lg p-6 mb-6">
             <div class="space-y-6">
                 <div>
+                    <label class="flex items-center space-x-2 text-sm text-gray-700 mb-2">
+                        <input type="checkbox" name="show_about" value="1" <?= !empty($formData['show_about']) ? 'checked' : '' ?> class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Show About Us section</span>
+                    </label>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="about_us">About Us</label>
                     <textarea
                         id="about_us"
@@ -262,6 +320,10 @@ ob_start();
                 </div>
 
                 <div>
+                    <label class="flex items-center space-x-2 text-sm text-gray-700 mb-2">
+                        <input type="checkbox" name="show_vision" value="1" <?= !empty($formData['show_vision']) ? 'checked' : '' ?> class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Show Vision section</span>
+                    </label>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="vision">Vision Statement</label>
                     <textarea
                         id="vision"
@@ -275,6 +337,10 @@ ob_start();
                 </div>
 
                 <div>
+                    <label class="flex items-center space-x-2 text-sm text-gray-700 mb-2">
+                        <input type="checkbox" name="show_mission" value="1" <?= !empty($formData['show_mission']) ? 'checked' : '' ?> class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Show Mission section</span>
+                    </label>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="mission">Mission Statement</label>
                     <textarea
                         id="mission"
@@ -288,6 +354,10 @@ ob_start();
                 </div>
 
                 <div>
+                    <label class="flex items-center space-x-2 text-sm text-gray-700 mb-2">
+                        <input type="checkbox" name="show_values" value="1" <?= !empty($formData['show_values']) ? 'checked' : '' ?> class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span>Show Values section</span>
+                    </label>
                     <label class="block text-sm font-medium text-gray-700 mb-1" for="values">Values</label>
                     <div id="values-container" class="space-y-2">
                         <?php

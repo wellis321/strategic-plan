@@ -6,25 +6,79 @@ $request = $_SERVER['REQUEST_URI'];
 $path = parse_url($request, PHP_URL_PATH);
 
 // Remove base path if app is in a subdirectory
-$scriptName = dirname($_SERVER['SCRIPT_NAME']);
-if ($scriptName !== '/' && $scriptName !== '\\') {
-    $path = str_replace($scriptName, '', $path);
+// Don't strip anything from API routes - they should always be at root level
+if (strpos($path, '/api/') === 0) {
+    // Keep API routes as-is
+    $route = rtrim($path, '/');
+} else {
+    // Remove base path if app is in a subdirectory
+    $scriptName = dirname($_SERVER['SCRIPT_NAME']);
+    if ($scriptName !== '/' && $scriptName !== '\\' && $scriptName !== '.' && strpos($path, $scriptName) === 0) {
+        $path = substr($path, strlen($scriptName));
+    }
+    $path = rtrim($path, '/');
+    $route = $path ?: '/';
 }
-
-$path = rtrim($path, '/');
-$route = $path ?: '/';
 
 // Debug mode (remove in production)
 if (defined('APP_ENV') && APP_ENV === 'development' && isset($_GET['debug_route'])) {
     echo "<pre>Request URI: " . htmlspecialchars($_SERVER['REQUEST_URI']) . "\n";
     echo "Script Name: " . htmlspecialchars($_SERVER['SCRIPT_NAME']) . "\n";
     echo "Path: " . htmlspecialchars($path) . "\n";
-    echo "Route: " . htmlspecialchars($route) . "</pre>";
+    echo "Route: " . htmlspecialchars($route) . "\n";
+    echo "strpos('/api/') check: " . (strpos($route, '/api/') === 0 ? 'TRUE' : 'FALSE') . "</pre>";
     exit;
 }
 
+// Temporary: Always show debug for API routes in development
+if (strpos($route, '/api/') === 0 && defined('APP_ENV') && APP_ENV === 'development') {
+    // Uncomment to debug:
+    // header('Content-Type: text/plain');
+    // echo "Route: $route\n";
+    // echo "Path: $path\n";
+    // echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "\n";
+    // exit;
+}
+
 // Handle routes
-if ($route === '/') {
+// API routes should be checked first
+// Debug: log the route for API requests
+if (strpos($route, '/api/') === 0) {
+    // Temporary debug - remove after fixing
+    if (defined('APP_ENV') && APP_ENV === 'development') {
+        error_log("API Route Debug - Route: '$route', REQUEST_URI: '" . $_SERVER['REQUEST_URI'] . "', Path: '$path'");
+    }
+
+    // Route API requests
+    if ($route === '/api/test-route') {
+        require __DIR__ . '/api/test-route.php';
+        exit;
+    } elseif ($route === '/api/top-sections/reorder' || preg_match('#^/api/top-sections/reorder#', $route)) {
+        // Debug: uncomment to see what's happening
+        // error_log("Matched /api/top-sections/reorder route. Route value: '$route'");
+        $apiFile = __DIR__ . '/api/top-sections-reorder.php';
+        if (!file_exists($apiFile)) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'API file not found: ' . $apiFile]);
+            exit;
+        }
+        require $apiFile;
+        exit;
+    } elseif ($route === '/api/projects' || strpos($route, '/api/projects') === 0) {
+        require __DIR__ . '/api/projects.php';
+        exit;
+    } elseif ($route === '/api/goals' || strpos($route, '/api/goals') === 0) {
+        require __DIR__ . '/api/goals.php';
+        exit;
+    } else {
+        // Unknown API route
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'API endpoint not found']);
+        exit;
+    }
+} elseif ($route === '/') {
     // Show home page for non-logged-in users, dashboard for logged-in users
     if (isLoggedIn()) {
         require 'pages/dashboard.php';
@@ -105,6 +159,16 @@ if ($route === '/') {
 } elseif (preg_match('#^/sections/(\d+)/delete$#', $route, $matches)) {
     $_GET['id'] = $matches[1];
     require 'pages/sections/delete.php';
+} elseif ($route === '/top-sections' || $route === '/top-sections/') {
+    require 'pages/top-sections/index.php';
+} elseif ($route === '/top-sections/new') {
+    require 'pages/top-sections/new.php';
+} elseif (preg_match('#^/top-sections/(\d+)/edit$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/top-sections/edit.php';
+} elseif (preg_match('#^/top-sections/(\d+)/delete$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/top-sections/delete.php';
 } elseif ($route === '/plans' || $route === '/plans/') {
     require 'pages/plans/index.php';
 } elseif ($route === '/plans/new') {
@@ -118,10 +182,6 @@ if ($route === '/') {
 } elseif (preg_match('#^/plans/(\d+)/delete$#', $route, $matches)) {
     $_GET['id'] = $matches[1];
     require 'pages/plans/delete.php';
-} elseif ($route === '/api/projects' || strpos($route, '/api/projects') === 0) {
-    require 'api/projects.php';
-} elseif ($route === '/api/goals' || strpos($route, '/api/goals') === 0) {
-    require 'api/goals.php';
 } elseif ($route === '/terms') {
     require 'pages/terms.php';
 } elseif ($route === '/privacy') {

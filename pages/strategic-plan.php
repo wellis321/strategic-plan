@@ -6,6 +6,7 @@ $goalModel = new Goal();
 $projectModel = new Project();
 $sectionModel = new StrategicPlanSection();
 $planModel = new StrategicPlan();
+$topSectionModel = new OrganizationTopSection();
 
 // Get current user's organization
 $currentUser = getCurrentUser();
@@ -47,6 +48,7 @@ $planId = $activePlan ? $activePlan['id'] : null;
 $sections = $planId ? $sectionModel->getAll(['plan_id' => $planId]) : [];
 $goals = $planId ? $goalModel->getAll(['plan_id' => $planId]) : [];
 $projects = $planId ? $projectModel->getAll(['plan_id' => $planId]) : [];
+$topSections = $topSectionModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);
 
 // Group projects by goal
 $projectsByGoal = [];
@@ -186,6 +188,150 @@ $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$he
                 <a href="/organization/settings" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 underline ml-1' : '' ?>">Add them now</a>.
             </p>
         </div>
+    <?php endif; ?>
+
+    <?php if (!empty($topSections)): ?>
+        <!-- Custom Top Sections -->
+        <?php foreach ($topSections as $topSection): ?>
+            <?php
+            $sectionType = $topSection['section_type'] ?? 'custom';
+            $hasImage = !empty($topSection['image_path']);
+            $imagePosition = $topSection['image_position'] ?? 'left';
+            $content = $topSection['content'] ?? '';
+            $title = $topSection['title'] ?? '';
+            $size = $topSection['size'] ?? 'medium';
+
+            // Size-based styling (padding and fonts, but height stays flexible)
+            $paddingClasses = [
+                'small' => 'p-4 md:p-5',
+                'medium' => 'p-6 md:p-8',
+                'large' => 'p-8 md:p-12'
+            ];
+            $titleSizes = [
+                'small' => 'text-xl',
+                'medium' => 'text-2xl',
+                'large' => 'text-3xl'
+            ];
+            $contentSizes = [
+                'small' => 'text-sm',
+                'medium' => 'text-base',
+                'large' => 'text-lg'
+            ];
+            $imageHeights = [
+                'small' => 'h-52',
+                'medium' => 'h-64',
+                'large' => 'h-80'
+            ];
+            $backgroundHeights = [
+                'small' => 'h-64',
+                'medium' => 'h-80',
+                'large' => 'h-96'
+            ];
+
+            $padding = $paddingClasses[$size] ?? $paddingClasses['medium'];
+            $titleSize = $titleSizes[$size] ?? $titleSizes['medium'];
+            $contentSize = $contentSizes[$size] ?? $contentSizes['medium'];
+            $imageHeight = $imageHeights[$size] ?? $imageHeights['medium'];
+            $backgroundHeight = $backgroundHeights[$size] ?? $backgroundHeights['medium'];
+
+                // Hero section type gets special treatment with gradient background
+                if ($sectionType === 'hero'):
+                    // Use custom colors if provided, otherwise fall back to organization defaults
+                    $heroBgStart = !empty($topSection['hero_bg_start'])
+                        ? $topSection['hero_bg_start']
+                        : ($organization['hero_bg_start'] ?? '#1D4ED8');
+                    $heroBgEnd = !empty($topSection['hero_bg_end'])
+                        ? $topSection['hero_bg_end']
+                        : ($organization['hero_bg_end'] ?? '#9333EA');
+                    $heroGradientStyle = "background: linear-gradient(to right, {$heroBgStart}, {$heroBgEnd});";
+                ?>
+                <div class="relative rounded-lg overflow-hidden mb-8 shadow-lg" style="<?= h($heroGradientStyle) ?>">
+                    <div class="absolute inset-0 bg-black/30"></div>
+                    <div class="relative <?= $padding ?> text-white">
+                        <?php if ($title): ?>
+                            <h2 class="<?= $titleSize ?> font-bold mb-3"><?= h($title) ?></h2>
+                        <?php endif; ?>
+                        <?php if ($content): ?>
+                            <div class="<?= $contentSize ?> text-blue-100 max-w-3xl rich-text-content"><?= displayRichText($content) ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ($hasImage): ?>
+                        <div class="relative <?= $imageHeight ?>">
+                            <img src="<?= asset($topSection['image_path']) ?>" alt="<?= h($title) ?>" class="w-full <?= $imageHeight ?> object-cover">
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php
+            // Regular sections render based on image position - wrap in container
+            else:
+            ?>
+                <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+                <?php
+                if ($imagePosition === 'background' && $hasImage):
+                ?>
+                    <div class="relative <?= $backgroundHeight ?>">
+                        <img src="<?= asset($topSection['image_path']) ?>" alt="<?= h($title) ?>" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/40"></div>
+                        <div class="absolute inset-0 <?= $padding ?> text-white">
+                            <?php if ($title): ?>
+                                <h2 class="<?= $titleSize ?> font-bold mb-3"><?= h($title) ?></h2>
+                            <?php endif; ?>
+                            <?php if ($content): ?>
+                                <div class="<?= $contentSize ?> text-white/90 max-w-3xl rich-text-content"><?= displayRichText($content) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php elseif ($imagePosition === 'top' && $hasImage): ?>
+                    <div>
+                        <img src="<?= asset($topSection['image_path']) ?>" alt="<?= h($title) ?>" class="w-full <?= $imageHeight ?> object-cover">
+                        <div class="<?= $padding ?>">
+                            <?php if ($title): ?>
+                                <h2 class="<?= $titleSize ?> font-semibold text-gray-900 mb-3"><?= h($title) ?></h2>
+                            <?php endif; ?>
+                            <?php if ($content): ?>
+                                <div class="<?= $contentSize ?> text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($content) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php elseif ($imagePosition === 'bottom' && $hasImage): ?>
+                    <div>
+                        <div class="<?= $padding ?>">
+                            <?php if ($title): ?>
+                                <h2 class="<?= $titleSize ?> font-semibold text-gray-900 mb-3"><?= h($title) ?></h2>
+                            <?php endif; ?>
+                            <?php if ($content): ?>
+                                <div class="<?= $contentSize ?> text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($content) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <img src="<?= asset($topSection['image_path']) ?>" alt="<?= h($title) ?>" class="w-full <?= $imageHeight ?> object-cover">
+                    </div>
+                <?php elseif (($imagePosition === 'left' || $imagePosition === 'right') && $hasImage): ?>
+                    <div class="md:flex">
+                        <div class="<?= $imagePosition === 'left' ? 'md:w-1/3' : 'md:w-1/3 md:order-2' ?>">
+                            <img src="<?= asset($topSection['image_path']) ?>" alt="<?= h($title) ?>" class="w-full h-full object-cover">
+                        </div>
+                        <div class="<?= ($imagePosition === 'left' ? 'md:w-2/3' : 'md:w-2/3 md:order-1') ?> <?= $padding ?>">
+                            <?php if ($title): ?>
+                                <h2 class="<?= $titleSize ?> font-semibold text-gray-900 mb-3"><?= h($title) ?></h2>
+                            <?php endif; ?>
+                            <?php if ($content): ?>
+                                <div class="<?= $contentSize ?> text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($content) ?></div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="<?= $padding ?>">
+                        <?php if ($title): ?>
+                            <h2 class="<?= $titleSize ?> font-semibold text-gray-900 mb-3"><?= h($title) ?></h2>
+                        <?php endif; ?>
+                        <?php if ($content): ?>
+                            <div class="<?= $contentSize ?> text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($content) ?></div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        <?php endforeach; ?>
     <?php endif; ?>
 
     <?php if (!empty($sections)): ?>

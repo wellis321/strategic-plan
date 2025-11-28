@@ -16,14 +16,14 @@ ob_start();
 
 <div class="mb-8">
     <header class="mb-6">
-        <div class="flex justify-between items-center">
-            <div>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <div class="flex-1 min-w-0">
                 <h1 class="text-3xl font-bold text-gray-900">Strategic Plans</h1>
                 <p class="mt-2 text-gray-600">
                     Manage multiple strategic plans for your organisation. Each plan can have its own URL (e.g., /<?= h($organization['slug'] ?? 'your-org') ?>/2025-2030plan).
                 </p>
             </div>
-            <div>
+            <div class="flex-shrink-0">
                 <?= DesignSystem::button('Create New Plan', '/plans/new', 'primary') ?>
             </div>
         </div>

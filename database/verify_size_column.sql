@@ -1,0 +1,6 @@
+-- Verify if size column exists
+SELECT COLUMN_NAME, DATA_TYPE, COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'organization_top_sections'
+  AND COLUMN_NAME = 'size';

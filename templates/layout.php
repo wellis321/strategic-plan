@@ -84,7 +84,7 @@
 
                                 <!-- Strategic Plan Dropdown -->
                                 <li class="relative group">
-                                    <button class="text-white hover:text-blue-100 flex items-center <?= (isCurrentPage('/strategic-plan') || isCurrentPage('/plans') || isCurrentPage('/sections') || isCurrentPage('/example-plan') || isCurrentPage('/template')) ? 'font-semibold text-blue-100' : '' ?>">
+                                    <button class="text-white hover:text-blue-100 flex items-center <?= (isCurrentPage('/strategic-plan') || isCurrentPage('/plans') || isCurrentPage('/top-sections') || isCurrentPage('/sections') || isCurrentPage('/example-plan') || isCurrentPage('/template')) ? 'font-semibold text-blue-100' : '' ?>">
                                         Strategic Plan
                                         <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -94,6 +94,7 @@
                                         <a href="/strategic-plan" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 <?= isCurrentPage('/strategic-plan') ? 'bg-blue-50 font-semibold text-blue-700' : '' ?>">View Plan</a>
                                         <?php if (isOrganizationAdmin()): ?>
                                             <a href="/plans" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 <?= isCurrentPage('/plans') ? 'bg-blue-50 font-semibold text-blue-700' : '' ?>">Manage Plans</a>
+                                            <a href="/top-sections" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 <?= isCurrentPage('/top-sections') ? 'bg-blue-50 font-semibold text-blue-700' : '' ?>">Top Sections</a>
                                             <a href="/sections" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 <?= isCurrentPage('/sections') ? 'bg-blue-50 font-semibold text-blue-700' : '' ?>">Sections</a>
                                         <?php endif; ?>
                                         <div class="border-t border-gray-100 my-1"></div>

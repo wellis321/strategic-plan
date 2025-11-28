@@ -17,14 +17,14 @@ ob_start();
 
 <div class="mb-8">
     <header class="mb-6">
-        <div class="flex justify-between items-center">
-            <div>
+        <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+            <div class="flex-1 min-w-0">
                 <h1 class="text-3xl font-bold text-gray-900">Strategic Plan Sections</h1>
                 <p class="mt-2 text-gray-600">
                     Create custom sections or chapters for your strategic plan. These can provide context, background information, or relate to specific goals.
                 </p>
             </div>
-            <div>
+            <div class="flex-shrink-0">
                 <?= DesignSystem::button('Add New Section', '/sections/new', 'primary') ?>
             </div>
         </div>

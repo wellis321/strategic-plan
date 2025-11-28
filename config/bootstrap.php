@@ -22,6 +22,7 @@ require_once __DIR__ . '/../classes/Organization.php';
 require_once __DIR__ . '/../classes/User.php';
 require_once __DIR__ . '/../classes/StrategicPlanSection.php';
 require_once __DIR__ . '/../classes/StrategicPlan.php';
+require_once __DIR__ . '/../classes/OrganizationTopSection.php';
 
 // Load utility functions
 require_once __DIR__ . '/../includes/functions.php';

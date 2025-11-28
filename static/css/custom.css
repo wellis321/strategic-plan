@@ -50,10 +50,21 @@ body {
 .rich-text-content ol {
     margin-left: 1.5em;
     margin-bottom: 1em;
+    padding-left: 1.5em;
+    list-style-position: outside;
+}
+
+.rich-text-content ul {
+    list-style-type: disc;
+}
+
+.rich-text-content ol {
+    list-style-type: decimal;
 }
 
 .rich-text-content li {
     margin-bottom: 0.5em;
+    display: list-item;
 }
 
 .rich-text-content a {

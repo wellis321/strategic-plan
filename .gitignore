@@ -1,0 +1,48 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# PHP
+*.log
+*.cache
+/vendor/
+composer.phar
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Database backups
+*.sql.backup
+*.sql.bak
+database/backups/
+
+# Session files (if stored in project directory)
+sessions/
+
+# Uploaded assets
+static/uploads/
+
+# Error logs
+error_log
+php_errors.log
+
+overview.txt
+DEPLOYMENT.md
+https://github.com/wellis321/strategic-plan.git.php

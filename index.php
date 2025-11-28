@@ -1,0 +1,143 @@
+<?php
+require_once 'config/bootstrap.php';
+
+// Simple routing
+$request = $_SERVER['REQUEST_URI'];
+$path = parse_url($request, PHP_URL_PATH);
+
+// Remove base path if app is in a subdirectory
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
+if ($scriptName !== '/' && $scriptName !== '\\') {
+    $path = str_replace($scriptName, '', $path);
+}
+
+$path = rtrim($path, '/');
+$route = $path ?: '/';
+
+// Debug mode (remove in production)
+if (defined('APP_ENV') && APP_ENV === 'development' && isset($_GET['debug_route'])) {
+    echo "<pre>Request URI: " . htmlspecialchars($_SERVER['REQUEST_URI']) . "\n";
+    echo "Script Name: " . htmlspecialchars($_SERVER['SCRIPT_NAME']) . "\n";
+    echo "Path: " . htmlspecialchars($path) . "\n";
+    echo "Route: " . htmlspecialchars($route) . "</pre>";
+    exit;
+}
+
+// Handle routes
+if ($route === '/') {
+    // Show home page for non-logged-in users, dashboard for logged-in users
+    if (isLoggedIn()) {
+        require 'pages/dashboard.php';
+    } else {
+        require 'pages/home.php';
+    }
+} elseif ($route === '/home') {
+    require 'pages/home.php';
+} elseif ($route === '/template') {
+    require 'pages/template.php';
+} elseif ($route === '/login') {
+    require 'pages/login.php';
+} elseif ($route === '/register') {
+    require 'pages/register.php';
+} elseif ($route === '/verify-email') {
+    require 'pages/verify-email.php';
+} elseif ($route === '/logout') {
+    require 'pages/logout.php';
+} elseif ($route === '/admin' || $route === '/admin/') {
+    require 'pages/admin/index.php';
+} elseif ($route === '/admin/organizations/new') {
+    require 'pages/admin/organizations/new.php';
+} elseif (preg_match('#^/admin/organizations/(\d+)/edit$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/admin/organizations/edit.php';
+} elseif (preg_match('#^/admin/organizations/(\d+)/users$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/admin/organizations/users.php';
+} elseif ($route === '/admin/users/promote') {
+    require 'pages/admin/users/promote.php';
+} elseif ($route === '/admin/users/demote') {
+    require 'pages/admin/users/demote.php';
+} elseif ($route === '/admin/users/remove') {
+    require 'pages/admin/users/remove.php';
+} elseif ($route === '/admin/users/activate') {
+    require 'pages/admin/users/activate.php';
+} elseif ($route === '/admin/users/deactivate') {
+    require 'pages/admin/users/deactivate.php';
+} elseif ($route === '/projects') {
+    require 'pages/projects/index.php';
+} elseif ($route === '/projects/new') {
+    require 'pages/projects/create.php';
+} elseif ($route === '/projects/edit') {
+    require 'pages/projects/edit.php';
+} elseif (preg_match('#^/projects/([^/]+)$#', $route, $matches)) {
+    // Dynamic project route: /projects/{slug}
+    $_GET['slug'] = $matches[1];
+    require 'pages/projects/view.php';
+} elseif ($route === '/goals') {
+    require 'pages/goals/index.php';
+} elseif ($route === '/goals/new') {
+    require 'pages/goals/create.php';
+} elseif ($route === '/goals/edit') {
+    require 'pages/goals/edit.php';
+} elseif (preg_match('#^/goals/(\d+)$#', $route, $matches)) {
+    // Dynamic goal route: /goals/{id}
+    $_GET['id'] = $matches[1];
+    require 'pages/goals/view.php';
+} elseif ($route === '/reports') {
+    require 'pages/reports.php';
+} elseif ($route === '/strategic-plan') {
+    require 'pages/strategic-plan.php';
+} elseif ($route === '/example-plan') {
+    require 'pages/example-plan.php';
+} elseif ($route === '/example-plan-in-progress') {
+    require 'pages/example-plan-in-progress.php';
+} elseif ($route === '/about') {
+    require 'pages/about.php';
+} elseif ($route === '/organization/settings') {
+    require 'pages/organization/settings.php';
+} elseif ($route === '/sections' || $route === '/sections/') {
+    require 'pages/sections/index.php';
+} elseif ($route === '/sections/new') {
+    require 'pages/sections/new.php';
+} elseif (preg_match('#^/sections/(\d+)/edit$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/sections/edit.php';
+} elseif (preg_match('#^/sections/(\d+)/delete$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/sections/delete.php';
+} elseif ($route === '/plans' || $route === '/plans/') {
+    require 'pages/plans/index.php';
+} elseif ($route === '/plans/new') {
+    require 'pages/plans/new.php';
+} elseif (preg_match('#^/plans/(\d+)/edit$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/plans/edit.php';
+} elseif (preg_match('#^/plans/(\d+)/view$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/plans/view.php';
+} elseif (preg_match('#^/plans/(\d+)/delete$#', $route, $matches)) {
+    $_GET['id'] = $matches[1];
+    require 'pages/plans/delete.php';
+} elseif ($route === '/api/projects' || strpos($route, '/api/projects') === 0) {
+    require 'api/projects.php';
+} elseif ($route === '/api/goals' || strpos($route, '/api/goals') === 0) {
+    require 'api/goals.php';
+} elseif ($route === '/terms') {
+    require 'pages/terms.php';
+} elseif ($route === '/privacy') {
+    require 'pages/privacy.php';
+} elseif ($route === '/cookies') {
+    require 'pages/cookies.php';
+} elseif ($route === '/how-to-create') {
+    require 'pages/how-to-create.php';
+} elseif (preg_match('#^/([a-z0-9-]+)/([a-z0-9-]+)$#', $route, $matches)) {
+    // Handle organization/plan slug routes (e.g., /ramh/2025-2030plan)
+    // This must come last to avoid matching system routes like /plans/new, /admin/organizations, etc.
+    $_GET['org_slug'] = $matches[1];
+    $_GET['plan_slug'] = $matches[2];
+    require 'pages/public/strategic-plan.php';
+} else {
+    http_response_code(404);
+    require 'pages/404.php';
+}
+?>

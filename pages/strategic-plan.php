@@ -1,0 +1,287 @@
+<?php
+// Strategic Plan overview page
+requireLogin();
+
+$goalModel = new Goal();
+$projectModel = new Project();
+$sectionModel = new StrategicPlanSection();
+$planModel = new StrategicPlan();
+
+// Get current user's organization
+$currentUser = getCurrentUser();
+$organizationId = $currentUser['organization_id'];
+
+$orgModel = new Organization();
+$organization = $orgModel->getByIdWithValues($organizationId);
+
+// Get active plan or create default if none exists
+$activePlan = $planModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);
+$activePlan = !empty($activePlan) ? $activePlan[0] : null;
+
+// If no active plan, get the most recent published plan or create a default
+if (!$activePlan) {
+    $allPlans = $planModel->getAll(['organization_id' => $organizationId]);
+    if (!empty($allPlans)) {
+        $activePlan = $allPlans[0];
+    } else {
+        // Create a default plan for this organization
+        try {
+            $defaultPlanId = $planModel->create([
+                'organization_id' => $organizationId,
+                'title' => 'Strategic Plan ' . date('Y'),
+                'slug' => 'plan-' . date('Y'),
+                'status' => 'published',
+                'is_active' => true,
+                'created_by' => $currentUser['id']
+            ]);
+            $activePlan = $planModel->getById($defaultPlanId);
+        } catch (Exception $e) {
+            // If creation fails, continue without plan
+            $activePlan = null;
+        }
+    }
+}
+
+// Get plan-specific data
+$planId = $activePlan ? $activePlan['id'] : null;
+$sections = $planId ? $sectionModel->getAll(['plan_id' => $planId]) : [];
+$goals = $planId ? $goalModel->getAll(['plan_id' => $planId]) : [];
+$projects = $planId ? $projectModel->getAll(['plan_id' => $planId]) : [];
+
+// Group projects by goal
+$projectsByGoal = [];
+foreach ($projects as $project) {
+    $goalId = $project['goal_id'];
+    if (!isset($projectsByGoal[$goalId])) {
+        $projectsByGoal[$goalId] = [];
+    }
+    $projectsByGoal[$goalId][] = $project;
+}
+
+$title = ($activePlan ? h($activePlan['title']) : 'Strategic Plan') . ' - ' . APP_NAME;
+ob_start();
+?>
+
+<div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--4' : 'mb-8' ?>">
+    <header class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header' : 'mb-6' ?>">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header__title' : 'text-3xl font-bold text-gray-900' ?>">
+                    <?= $activePlan ? h($activePlan['title']) : 'Strategic Plan' ?>
+                </h1>
+                <p class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'mt-2 text-gray-600' : '' ?>">
+                    <?= h($organization['name'] ?? 'Our Organisation') ?>
+                    <?php if ($activePlan && ($activePlan['start_year'] || $activePlan['end_year'])): ?>
+                        <?php if ($activePlan['start_year'] && $activePlan['end_year']): ?>
+                            (<?= h($activePlan['start_year']) ?> - <?= h($activePlan['end_year']) ?>)
+                        <?php elseif ($activePlan['start_year']): ?>
+                            (<?= h($activePlan['start_year']) ?> onwards)
+                        <?php elseif ($activePlan['end_year']): ?>
+                            (until <?= h($activePlan['end_year']) ?>)
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </p>
+                <?php if ($activePlan && isOrganizationAdmin()): ?>
+                    <p class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'mt-1 text-sm text-gray-500' : '' ?>">
+                        Public URL: <a href="/<?= h($organization['slug'] ?? 'org') ?>/<?= h($activePlan['slug']) ?>" target="_blank" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 hover:text-blue-800' : '' ?>">/<?= h($organization['slug'] ?? 'org') ?>/<?= h($activePlan['slug']) ?></a>
+                    </p>
+                <?php endif; ?>
+            </div>
+            <?php if (isOrganizationAdmin()): ?>
+                <div>
+                    <?= DesignSystem::button('Manage Plans', '/plans', 'secondary', ['class' => 'text-sm']) ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </header>
+
+<?php
+$hasHeroContent = !empty($organization['hero_title']) || !empty($organization['hero_subtitle']) || !empty($organization['hero_image_path']);
+$heroHeight = $organization['hero_image_height'] ?? 'medium';
+$heroHeightClass = [
+    'short' => 'h-52',
+    'tall' => 'h-80'
+][$heroHeight] ?? 'h-64';
+?>
+    <?php if ($hasHeroContent): ?>
+        <div class="relative bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 rounded-lg overflow-hidden mb-8 shadow-lg">
+            <div class="absolute inset-0 bg-black/30"></div>
+            <div class="relative p-8 md:p-12 text-white">
+                <h2 class="text-3xl font-bold mb-3"><?= h($organization['hero_title'] ?? ($activePlan['title'] ?? 'Strategic Plan')) ?></h2>
+                <?php if (!empty($organization['hero_subtitle'])): ?>
+                    <p class="text-lg text-blue-100 max-w-3xl"><?= h($organization['hero_subtitle']) ?></p>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($organization['hero_image_path'])): ?>
+                <div class="relative <?= $heroHeightClass ?>">
+                    <img src="<?= asset($organization['hero_image_path']) ?>" alt="Organisation hero banner" class="w-full <?= $heroHeightClass ?> object-cover">
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($organization['about_us']) || !empty($organization['vision']) || !empty($organization['mission']) || !empty($organization['values'])): ?>
+        <!-- About Us, Vision, Mission, Values Section -->
+        <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+            <div class="md:flex">
+                <?php if (!empty($organization['about_image_path'])): ?>
+                    <div class="md:w-1/3">
+                        <img src="<?= asset($organization['about_image_path']) ?>" alt="About our organisation" class="w-full h-full object-cover">
+                    </div>
+                <?php endif; ?>
+                <div class="<?= !empty($organization['about_image_path']) ? 'md:w-2/3' : 'w-full' ?> p-6 md:p-8 space-y-6">
+                    <?php if (!empty($organization['about_us'])): ?>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">About Us</h2>
+                            <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['about_us']) ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($organization['vision'])): ?>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Vision</h2>
+                            <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['vision']) ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($organization['mission'])): ?>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Mission</h2>
+                            <div class="text-gray-700 leading-relaxed rich-text-content"><?= displayRichText($organization['mission']) ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($organization['values'])): ?>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900 mb-2">Our Values</h2>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <?php foreach ($organization['values'] as $value): ?>
+                                    <li><?= h($value['value_text']) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isOrganizationAdmin()): ?>
+                        <div class="pt-4 border-t">
+                            <?= DesignSystem::button('Edit Hero & About Content', '/organization/settings', 'secondary') ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php elseif (isOrganizationAdmin()): ?>
+        <!-- Prompt to add About Us/Vision/Mission/Values if admin -->
+        <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_notification ds_!_margin-bottom--6' : 'bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8' ?>">
+            <p class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-800' : '' ?>">
+                <strong>Tip:</strong> Add your organisation's hero banner, description, Vision, Mission, and Values to provide context for your strategic plan.
+                <a href="/organization/settings" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 underline ml-1' : '' ?>">Add them now</a>.
+            </p>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($sections)): ?>
+        <!-- Strategic Plan Sections -->
+        <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--6' : 'mb-8' ?>">
+            <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--3' : 'flex justify-between items-center mb-4' ?>">
+                <h2 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium' : 'text-2xl font-bold text-gray-900' ?>">Strategic Plan Sections</h2>
+                <?php if (isOrganizationAdmin()): ?>
+                    <?= DesignSystem::button('Manage Sections', '/sections', 'secondary', ['class' => 'text-sm']) ?>
+                <?php endif; ?>
+            </div>
+
+            <?php foreach ($sections as $section): ?>
+                <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card ds_!_margin-bottom--4' : 'bg-white shadow rounded-lg p-6 mb-6' ?>">
+                    <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__header' : 'mb-4' ?>">
+                        <h3 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__title' : 'text-xl font-semibold text-gray-900' ?>">
+                            <?= h($section['title']) ?>
+                            <?php if ($section['linked_goal_id']): ?>
+                                <span class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'ml-2 text-sm font-normal text-blue-600' : '' ?>">
+                                    (Related to Goal <?= h($section['goal_number']) ?>)
+                                </span>
+                            <?php endif; ?>
+                        </h3>
+                    </div>
+                    <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : '' ?>">
+                        <div class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-700 leading-relaxed rich-text-content' : '' ?>"><?= displayRichText($section['content']) ?></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <h2 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium ds_!_margin-bottom--4' : 'text-2xl font-bold text-gray-900 mb-6' ?>">Strategic Goals</h2>
+
+    <?php if (empty($goals)): ?>
+        <?= DesignSystem::alert('No strategic goals found. <a href="/goals/new">Create your first goal</a>.', 'info') ?>
+    <?php else: ?>
+        <?php foreach ($goals as $goal): ?>
+            <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--6' : 'mb-8' ?>">
+                <?php
+                $goalProjects = $projectsByGoal[$goal['id']] ?? [];
+                $goalContent = "
+                    <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__header' : 'mb-4') . "'>
+                        <h2 class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__title' : 'text-2xl font-bold text-gray-900') . "'>
+                            Goal " . h($goal['number']) . ": " . h($goal['title']) . "
+                        </h2>
+                    </div>
+                    <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : 'mb-4') . "'>
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-4' : 'mb-4') . "'>" . displayRichText($goal['description'] ?? '') . "</div>
+                        " . (!empty($goal['statements']) ? "
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'mb-4' : 'mb-4') . "'>
+                            <h4 class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'font-medium text-gray-900 mb-2' : 'font-weight-bold mb-2') . "'>Goal Statements:</h4>
+                            <ul class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'list-disc list-inside text-sm text-gray-600 space-y-1' : 'list-disc list-inside') . "'>
+                                " . implode('', array_map(function($stmt) {
+                                    return "<li>" . displayRichText($stmt) . "</li>";
+                                }, $goal['statements'])) . "
+                            </ul>
+                        </div>
+                        " : "") . "
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata' : 'text-sm text-gray-600 mb-4') . "'>
+                            <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : 'mb-2') . "'>
+                                <dt>Responsible Senior manager</dt>
+                                <dd>" . h($goal['responsible_director']) . "</dd>
+                            </div>
+                            <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_metadata__item' : '') . "'>
+                                <dt>Projects</dt>
+                                <dd>" . count($goalProjects) . " " . pluralize(count($goalProjects), 'project') . "</dd>
+                            </div>
+                        </div>
+
+                        " . (!empty($goalProjects) ? "
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'mt-4' : 'mt-4') . "'>
+                            <h4 class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'font-medium text-gray-900 mb-3' : 'font-weight-bold mb-3') . "'>Associated Projects:</h4>
+                            <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card-list' : 'space-y-2') . "'>
+                                " . implode('', array_map(function($project) {
+                                    $progress = calculateProgress($project['milestones']);
+                                    return "
+                                        <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card' : 'bg-gray-50 p-3 rounded') . "'>
+                                            <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__header' : 'flex justify-between items-center') . "'>
+                                                <span class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_tag' : 'inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-2') . "'>" . h($project['project_number']) . "</span>
+                                                <strong>" . h($project['title']) . "</strong>
+                                                <span class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-sm text-gray-500' : '') . "'>{$progress}%</span>
+                                            </div>
+                                        </div>
+                                    ";
+                                }, array_slice($goalProjects, 0, 5))) . "
+                                " . (count($goalProjects) > 5 ? "<p class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-sm text-gray-500 mt-2' : 'mt-2') . "'>... and " . (count($goalProjects) - 5) . " more project(s)</p>" : "") . "
+                            </div>
+                        </div>
+                        " : "<p class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-500 italic' : 'italic') . "'>No projects associated with this goal yet.</p>") . "
+                    </div>
+                    <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__footer' : 'flex justify-end space-x-2 pt-4 border-t') . "'>
+                        " . DesignSystem::button('View Goal Details', '/goals/' . $goal['id'], 'primary') . "
+                        " . DesignSystem::button('View All Projects', '/projects?goal_id=' . $goal['id'], 'secondary') . "
+                    </div>
+                ";
+                echo DesignSystem::card($goalContent);
+                ?>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
+
+<?php
+$content = ob_get_clean();
+include __DIR__ . '/../templates/layout.php';
+?>

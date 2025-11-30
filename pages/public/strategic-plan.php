@@ -354,7 +354,10 @@ ob_start();
                         </h3>
                     </div>
                     <div class="mb-4">
-                        <div class="text-gray-600 mb-4"><?= displayRichText($goal['description'] ?? '') ?></div>
+                        <?php $description = displayRichText($goal['description'] ?? ''); ?>
+                        <?php if (!empty($description)): ?>
+                            <div class="text-gray-600 mb-4"><?= $description ?></div>
+                        <?php endif; ?>
                         <?php if (!empty($goal['statements'])): ?>
                             <div class="mb-4">
                                 <h4 class="font-medium text-gray-900 mb-2">Goal Statements:</h4>

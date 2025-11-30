@@ -35,6 +35,7 @@ ob_start();
             <?php foreach ($goals as $goal): ?>
                 <?php
                 $projectCount = $goalModel->getProjectCount($goal['id']);
+                $goalDescription = displayRichText($goal['description'] ?? '');
                 $goalContent = "
                     <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__header' : 'mb-3') . "'>
                         <h2 class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__title' : 'text-lg font-semibold text-gray-900') . "'>
@@ -42,7 +43,9 @@ ob_start();
                         </h2>
                     </div>
                     <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : 'mb-4') . "'>
-                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-3' : 'mb-3') . "'>" . displayRichText($goal['description'] ?? '') . "</div>
+                        " . (!empty($goalDescription) ? "
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-3' : 'mb-3') . "'>" . $goalDescription . "</div>
+                        " : "") . "
                         " . (!empty($goal['statements']) ? "
                         <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'mb-3' : 'mb-3') . "'>
                             <h4 class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'font-medium text-gray-900 mb-2' : 'font-weight-bold mb-2') . "'>Goal Statements:</h4>

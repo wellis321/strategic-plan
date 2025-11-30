@@ -380,6 +380,27 @@ ob_start();
             <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--6' : 'mb-8' ?>">
                 <?php
                 $goalProjects = $projectsByGoal[$goal['id']] ?? [];
+                $goalDescription = displayRichText($goal['description'] ?? '');
+                // Double-check: if description is empty HTML, make sure it's truly empty
+                if (!empty($goalDescription)) {
+                    $testContent = strip_tags($goalDescription);
+                    $testContent = html_entity_decode($testContent, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $testContent = preg_replace('/[\s\n\r\t]+/', '', $testContent);
+                    $testContent = str_replace("\xC2\xA0", '', $testContent);
+                    if (empty($testContent)) {
+                        $goalDescription = '';
+                    }
+                }
+                // Filter out empty statements
+                $nonEmptyStatements = [];
+                if (!empty($goal['statements'])) {
+                    foreach ($goal['statements'] as $stmt) {
+                        $rendered = displayRichText($stmt);
+                        if (!empty($rendered)) {
+                            $nonEmptyStatements[] = $stmt;
+                        }
+                    }
+                }
                 $goalContent = "
                     <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__header' : 'mb-4') . "'>
                         <h2 class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__title' : 'text-2xl font-bold text-gray-900') . "'>
@@ -387,14 +408,16 @@ ob_start();
                         </h2>
                     </div>
                     <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : 'mb-4') . "'>
-                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-4' : 'mb-4') . "'>" . displayRichText($goal['description'] ?? '') . "</div>
-                        " . (!empty($goal['statements']) ? "
+                        " . (!empty($goalDescription) ? "
+                        <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-4' : 'mb-4') . "'>" . $goalDescription . "</div>
+                        " : "") . "
+                        " . (!empty($nonEmptyStatements) ? "
                         <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'mb-4' : 'mb-4') . "'>
                             <h4 class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'font-medium text-gray-900 mb-2' : 'font-weight-bold mb-2') . "'>Goal Statements:</h4>
                             <ul class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'list-disc list-inside text-sm text-gray-600 space-y-1' : 'list-disc list-inside') . "'>
                                 " . implode('', array_map(function($stmt) {
                                     return "<li>" . displayRichText($stmt) . "</li>";
-                                }, $goal['statements'])) . "
+                                }, $nonEmptyStatements)) . "
                             </ul>
                         </div>
                         " : "") . "

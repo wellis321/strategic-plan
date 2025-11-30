@@ -51,11 +51,13 @@ ob_start();
     <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card-list' : 'space-y-6' ?>">
         <!-- Goal Details -->
         <?php
+        $goalDescription = displayRichText($goal['description'] ?? '');
         $goalContent = "
             <div class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card__body' : 'mb-4') . "'>
                 <h2 class='" . (DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium' : 'text-xl font-semibold text-gray-900 mb-4') . "'>Goal Details</h2>
-                <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-4' : 'mb-4') . "'>" . displayRichText($goal['description'] ?? '') . "</div>
-
+                " . (!empty($goalDescription) ? "
+                <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-gray-600 mb-4' : 'mb-4') . "'>" . $goalDescription . "</div>
+                " : "") . "
                 " . (!empty($goal['statements']) ? "
                 <div class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'mb-4' : 'mb-4') . "'>
                     <h3 class='" . (DesignSystem::getCurrentSystem() === 'tailwind' ? 'font-medium text-gray-900 mb-2' : 'font-weight-bold mb-2') . "'>Goal Statements:</h3>

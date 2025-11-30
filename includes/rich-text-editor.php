@@ -76,12 +76,30 @@ function initRichTextEditor($textareaId, $options = []) {
 /**
  * Sanitize HTML content before saving
  * @param string $html The HTML content to sanitize
- * @return string Sanitized HTML
+ * @return string Sanitized HTML, or empty string if content is empty
  */
 function sanitizeRichText($html) {
+    if (empty($html)) {
+        return '';
+    }
+
     // Allow basic formatting tags
     $allowedTags = '<p><br><strong><b><em><i><u><a><ul><ol><li>';
-    return strip_tags($html, $allowedTags);
+    $sanitized = strip_tags($html, $allowedTags);
+
+    // Check if the sanitized content is empty (only whitespace/breaks)
+    // Use the same logic as displayRichText to detect empty content
+    $textContent = strip_tags($sanitized);
+    $textContent = html_entity_decode($textContent, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $textContent = preg_replace('/[\s\n\r\t]+/', '', $textContent);
+    $textContent = str_replace("\xC2\xA0", '', $textContent);
+
+    // If there's no actual text content, return empty string
+    if (empty($textContent)) {
+        return '';
+    }
+
+    return $sanitized;
 }
 
 /**
@@ -96,6 +114,23 @@ function displayRichText($html) {
 
     // Trim whitespace
     $html = trim($html);
+
+    // Quick check: if the content is exactly or only contains empty paragraph tags, return empty immediately
+    // Check exact matches first (most common case)
+    if ($html === '<p><br></p>' || $html === '<p><br/></p>' || $html === '<p></p>' || $html === '<p> </p>') {
+        return '';
+    }
+
+    // Normalize and check patterns
+    $normalized = preg_replace('/\s+/', ' ', $html);
+    $normalized = trim($normalized);
+    if (preg_match('/^<p[^>]*>(<br\s*\/?>|\s|&nbsp;)*<\/p>$/i', $normalized) ||
+        preg_match('/^<p[^>]*>\s*<\/p>$/i', $normalized) ||
+        $normalized === '<p><br></p>' ||
+        $normalized === '<p><br/></p>' ||
+        $normalized === '<p></p>') {
+        return '';
+    }
 
     // Check if content is double-encoded (contains &lt; or &gt; entities)
     // This can happen with old data that was encoded with htmlspecialchars
@@ -113,8 +148,48 @@ function displayRichText($html) {
     // Clean and sanitize the HTML (this removes dangerous tags but keeps safe ones)
     $html = sanitizeRichText($html);
 
-    // Ensure proper paragraph spacing
-    $html = str_replace('<p></p>', '<p>&nbsp;</p>', $html);
+    // First, check if there's actual text content by stripping tags
+    // This is the most reliable way to detect empty content
+    $textContent = strip_tags($html);
+    // Decode HTML entities in text content (like &nbsp;)
+    $textContent = html_entity_decode($textContent, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    // Remove all whitespace characters (including non-breaking spaces)
+    $textContent = preg_replace('/[\s\n\r\t]+/', '', $textContent);
+    // Also remove non-breaking space character (0xC2 0xA0 in UTF-8)
+    $textContent = str_replace("\xC2\xA0", '', $textContent);
+
+    // If there's no actual text content, return empty immediately
+    if (empty($textContent)) {
+        return '';
+    }
+
+    // If we have content, clean up the HTML by removing empty tags
+    // Normalize whitespace first
+    $html = str_replace(["\n", "\r", "\t"], ' ', $html);
+    $html = preg_replace('/\s+/', ' ', $html); // Replace multiple spaces with single space
+
+    // Remove empty paragraph tags with breaks: <p><br></p>, <p><br/></p>, <p> <br> </p>, etc.
+    $html = preg_replace('/<p[^>]*>\s*(<br\s*\/?>\s*)*<\/p>/i', '', $html);
+    // Remove empty paragraph tags: <p></p>, <p> </p>
+    $html = preg_replace('/<p[^>]*>\s*<\/p>/i', '', $html);
+    // Remove paragraph tags with only non-breaking spaces or other whitespace entities
+    $html = preg_replace('/<p[^>]*>\s*(&nbsp;|\s)*\s*<\/p>/i', '', $html);
+
+    // Also remove other empty tags that might contain only breaks
+    $html = preg_replace('/<div[^>]*>\s*(<br\s*\/?>\s*)*<\/div>/i', '', $html);
+    $html = preg_replace('/<div[^>]*>\s*<\/div>/i', '', $html);
+
+    // Trim again after removing empty tags
+    $html = trim($html);
+
+    // Final check: if after cleaning, the content is empty, return empty string
+    $finalTextContent = strip_tags($html);
+    $finalTextContent = html_entity_decode($finalTextContent, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $finalTextContent = preg_replace('/[\s\n\r\t]+/', '', $finalTextContent);
+    $finalTextContent = str_replace("\xC2\xA0", '', $finalTextContent);
+    if (empty($finalTextContent)) {
+        return '';
+    }
 
     // The HTML is now safe to output directly - it will be rendered by the browser
     return $html;

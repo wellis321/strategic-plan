@@ -27,7 +27,7 @@ ob_start();
             </div>
         </div>
         <div class="relative h-64">
-            <img src="<?= asset('static/images/examples/completed/hero.jpeg') ?>" alt="Team celebrating successful strategic plan" class="w-full h-64 object-cover">
+            <img src="/static/images/examples/completed/hero.jpeg" alt="Team celebrating successful strategic plan" class="w-full h-64 object-cover">
         </div>
     </div>
 
@@ -35,7 +35,7 @@ ob_start();
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
         <div class="md:flex">
             <div class="md:w-1/3">
-                <img src="<?= asset('static/images/examples/completed/About-Us.jpeg') ?>" alt="Staff supporting community members" class="w-full h-full object-cover">
+                <img src="/static/images/examples/completed/About-Us.jpeg" alt="Staff supporting community members" class="w-full h-full object-cover">
             </div>
             <div class="md:w-2/3 p-8">
                 <h2 class="text-2xl font-bold text-gray-900 mb-4">About Us</h2>
@@ -126,7 +126,7 @@ ob_start();
         <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
             <div class="md:flex">
                 <div class="md:w-1/3">
-                    <img src="<?= asset('static/images/examples/completed/strategic-plan-section.jpeg') ?>" alt="Team workshop reviewing strategic context" class="w-full h-full object-cover">
+                    <img src="/static/images/examples/completed/strategic-plan-section.jpeg" alt="Team workshop reviewing strategic context" class="w-full h-full object-cover">
                 </div>
                 <div class="md:w-2/3 p-8">
                     <h3 class="text-2xl font-bold text-gray-900 mb-4">Context and Background</h3>
@@ -160,7 +160,7 @@ ob_start();
         <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
             <div class="md:flex md:flex-row-reverse">
                 <div class="md:w-1/3">
-                    <img src="<?= asset('static/images/examples/completed/strategic-priorities.jpeg') ?>" alt="Leadership team defining strategic priorities" class="w-full h-full object-cover">
+                    <img src="/static/images/examples/completed/strategic-priorities.jpeg" alt="Leadership team defining strategic priorities" class="w-full h-full object-cover">
                 </div>
                 <div class="md:w-2/3 p-8">
                     <h3 class="text-2xl font-bold text-gray-900 mb-4">Strategic Priorities</h3>

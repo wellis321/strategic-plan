@@ -19,6 +19,12 @@ if (isPost()) {
         // Handle description - preserve HTML from rich text editor
         if (!empty($postData['description'])) {
             $formData['description'] = sanitizeRichText($postData['description']);
+            // If sanitization resulted in empty string, set to empty
+            if (empty($formData['description'])) {
+                $formData['description'] = '';
+            }
+        } else {
+            $formData['description'] = '';
         }
 
         // Process statements - handle both HTML from rich text editor and plain text

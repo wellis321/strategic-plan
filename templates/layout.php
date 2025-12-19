@@ -16,7 +16,7 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
 </head>
 <body>
-    <div class="<?= DesignSystem::getPageClass() ?>">
+    <div class="<?= DesignSystem::getPageClass() ?> flex flex-col">
         <header class="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg">
             <div class="<?= DesignSystem::getContainerClass() ?>">
                 <div class="flex justify-between items-center py-4">

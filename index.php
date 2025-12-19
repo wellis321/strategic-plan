@@ -151,6 +151,8 @@ if (strpos($route, '/api/') === 0) {
     }
 } elseif ($route === '/home') {
     require 'pages/home.php';
+} elseif ($route === '/dashboard') {
+    require 'pages/dashboard.php';
 } elseif ($route === '/template') {
     require 'pages/template.php';
 } elseif ($route === '/login') {

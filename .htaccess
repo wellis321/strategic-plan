@@ -48,10 +48,11 @@ RewriteRule ^(.*)$ index.php [QSA,L]
     Deny from all
 </Files>
 
-<Files "test-*.php">
-    Order allow,deny
-    Deny from all
-</Files>
+# Temporarily allow test files for debugging - remove after fixing issues
+# <Files "test-*.php">
+#     Order allow,deny
+#     Deny from all
+# </Files>
 
 # PHP settings
 <IfModule mod_php7.c>

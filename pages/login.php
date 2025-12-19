@@ -23,28 +23,63 @@ if (isPost()) {
     }
 
     if (empty($errors)) {
+        // #region agent log
+        $logPath = __DIR__ . '/../.cursor/debug.log';
+        @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'A','location'=>'login.php:26','message'=>'Starting login check','data'=>['email'=>$email],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
         // First, check if user exists and get user data
         $user = $userModel->getByEmail($email);
         
+        // #region agent log
+        @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'A','location'=>'login.php:30','message'=>'User lookup result','data'=>['user_exists'=>!empty($user),'email_verified'=>$user['email_verified']??null,'status'=>$user['status']??null],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
         if (!$user) {
+            // #region agent log
+            @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'B','location'=>'login.php:33','message'=>'User not found','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
             // User doesn't exist - show generic error for security
             $errors['general'] = 'Invalid email or password';
         } elseif (!password_verify($password, $user['password_hash'])) {
+            // #region agent log
+            @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'C','location'=>'login.php:36','message'=>'Password incorrect','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
             // Password is incorrect - show generic error for security
             $errors['general'] = 'Invalid email or password';
         } else {
+            // #region agent log
+            @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'D','location'=>'login.php:40','message'=>'Password correct, checking verification','data'=>['email_verified_raw'=>$user['email_verified'],'status'=>$user['status']],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
+            
             // Password is correct, now check verification and status
             $emailVerified = (bool)$user['email_verified'] || $user['email_verified'] === 1 || $user['email_verified'] === '1';
             
+            // #region agent log
+            @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'D','location'=>'login.php:45','message'=>'Email verification check','data'=>['email_verified'=>$emailVerified,'email_verified_raw'=>$user['email_verified'],'email_verified_type'=>gettype($user['email_verified'])],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
+            
             if (!$emailVerified) {
+                // #region agent log
+                @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'E','location'=>'login.php:48','message'=>'Email not verified - showing verification message','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                // #endregion
                 $errors['general'] = 'Please verify your email address before logging in. Check your inbox for the verification link. If you need a new verification email, please contact support.';
             } elseif ($user['status'] !== 'active' && $user['status'] !== 'pending_verification') {
+                // #region agent log
+                @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'F','location'=>'login.php:51','message'=>'Account not active','data'=>['status'=>$user['status']],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                // #endregion
                 $errors['general'] = 'Your account is not active. Please contact your administrator.';
             } else {
+                // #region agent log
+                @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'G','location'=>'login.php:54','message'=>'All checks passed, calling authenticate()','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                // #endregion
                 // User is verified and active - proceed with login
                 // Use authenticate() to handle status updates and last login
                 $authenticatedUser = $userModel->authenticate($email, $password);
                 if ($authenticatedUser) {
+                    // #region agent log
+                    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'G','location'=>'login.php:58','message'=>'Authentication successful, logging in','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                    // #endregion
                     login($authenticatedUser);
                     setFlashMessage('success', 'Welcome back, ' . ($authenticatedUser['first_name'] ?? $authenticatedUser['email']) . '!');
 
@@ -53,6 +88,9 @@ if (isPost()) {
                     unset($_SESSION['redirect_after_login']);
                     redirect($redirectTo);
                 } else {
+                    // #region agent log
+                    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'login-attempt','hypothesisId'=>'H','location'=>'login.php:67','message'=>'Authenticate() returned false unexpectedly','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                    // #endregion
                     // This shouldn't happen, but handle it just in case
                     $errors['general'] = 'Unable to complete login. Please try again or contact support.';
                 }

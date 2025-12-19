@@ -8,13 +8,47 @@
 echo "<h2>PHP Version Test</h2>";
 echo "PHP Version: " . phpversion() . "<br><br>";
 
-// Test 2: Environment Variables
+// Test 2: .env File Check
+echo "<h2>.env File Check</h2>";
+$envPath = __DIR__ . '/.env';
+if (file_exists($envPath)) {
+    echo "✓ .env file exists<br>";
+    if (is_readable($envPath)) {
+        echo "✓ .env file is readable<br>";
+        echo "File size: " . filesize($envPath) . " bytes<br>";
+        // Show first few lines (without sensitive data)
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        echo "Number of lines: " . count($lines) . "<br>";
+        echo "First few lines (sanitized):<br>";
+        foreach (array_slice($lines, 0, 5) as $line) {
+            if (strpos(trim($line), '#') !== 0 && strpos($line, '=') !== false) {
+                $parts = explode('=', $line, 2);
+                if (isset($parts[1]) && (strpos($parts[0], 'PASS') !== false || strpos($parts[0], 'SECRET') !== false)) {
+                    echo htmlspecialchars($parts[0]) . "=***HIDDEN***<br>";
+                } else {
+                    echo htmlspecialchars(substr($line, 0, 50)) . "<br>";
+                }
+            }
+        }
+    } else {
+        echo "✗ .env file is NOT readable (check permissions)<br>";
+    }
+} else {
+    echo "✗ .env file does NOT exist at: " . htmlspecialchars($envPath) . "<br>";
+    echo "Current directory: " . __DIR__ . "<br>";
+}
+echo "<br>";
+
+// Test 2b: Environment Variables (after loading)
 echo "<h2>Environment Variables Test</h2>";
 require_once 'config/env.php';
-echo "DB_HOST: " . (defined('DB_HOST') ? DB_HOST : 'NOT SET') . "<br>";
-echo "DB_NAME: " . (defined('DB_NAME') ? DB_NAME : 'NOT SET') . "<br>";
-echo "DB_USER: " . (defined('DB_USER') ? DB_USER : 'NOT SET') . "<br>";
-echo "APP_ENV: " . (defined('APP_ENV') ? APP_ENV : 'NOT SET') . "<br><br>";
+require_once 'config/config.php';
+echo "DB_HOST: " . (defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: 'NOT SET')) . "<br>";
+echo "DB_NAME: " . (defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'NOT SET')) . "<br>";
+echo "DB_USER: " . (defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'NOT SET')) . "<br>";
+echo "APP_ENV: " . (defined('APP_ENV') ? APP_ENV : (getenv('APP_ENV') ?: 'NOT SET')) . "<br>";
+echo "getenv('DB_HOST'): " . (getenv('DB_HOST') ?: 'NOT SET') . "<br>";
+echo "\$_ENV['DB_HOST']: " . (isset($_ENV['DB_HOST']) ? $_ENV['DB_HOST'] : 'NOT SET') . "<br><br>";
 
 // Test 3: Database Connection
 echo "<h2>Database Connection Test</h2>";

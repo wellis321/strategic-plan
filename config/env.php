@@ -23,6 +23,25 @@ function loadEnv($path) {
     }
 }
 
-// Load .env file
-loadEnv(__DIR__ . '/../.env');
+// Load .env file - try multiple possible locations
+$envPaths = [
+    __DIR__ . '/../.env',
+    dirname(__DIR__) . '/.env',
+    $_SERVER['DOCUMENT_ROOT'] . '/.env',
+    getcwd() . '/.env'
+];
+
+$envLoaded = false;
+foreach ($envPaths as $envPath) {
+    if (file_exists($envPath) && is_readable($envPath)) {
+        loadEnv($envPath);
+        $envLoaded = true;
+        break;
+    }
+}
+
+// Log if .env file wasn't found (for debugging)
+if (!$envLoaded && function_exists('error_log')) {
+    error_log("Warning: .env file not found. Tried paths: " . implode(', ', $envPaths));
+}
 ?>

@@ -1,8 +1,27 @@
 <?php
 /**
  * Diagnostic test file - Remove this after fixing issues
- * Access via: https://rosybrown-cod-114553.hostingersite.com/test-connection.php
+ * Access via: https://rosybrown-cod-114553.hostingersite.com/debug-connection.php
  */
+
+// Enable error reporting and set up fatal error handler
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+
+// Set up error handler to catch fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== NULL && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE])) {
+        $logData = ['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'debug-connection.php:shutdown','message'=>'Fatal error detected','data'=>['type'=>$error['type'],'message'=>$error['message'],'file'=>$error['file'],'line'=>$error['line']],'timestamp'=>time()*1000];
+        @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode($logData)."\n", FILE_APPEND);
+        echo "<br><br><strong style='color: red;'>FATAL ERROR DETECTED:</strong><br>";
+        echo "Type: " . $error['type'] . "<br>";
+        echo "Message: " . htmlspecialchars($error['message']) . "<br>";
+        echo "File: " . htmlspecialchars($error['file']) . "<br>";
+        echo "Line: " . $error['line'] . "<br>";
+    }
+});
 
 // Test 1: PHP Version
 echo "<h2>PHP Version Test</h2>";
@@ -84,6 +103,11 @@ try {
     
     // Now try through Database class
     echo "<h3>Database Class Test</h3>";
+    
+    // #region agent log
+    file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'debug-connection.php:87','message'=>'Before Database class test','data'=>['app_env'=>defined('APP_ENV')?APP_ENV:'not_set'],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
     try {
         // Temporarily set APP_ENV to development to avoid die()
         $oldEnv = defined('APP_ENV') ? APP_ENV : null;
@@ -91,55 +115,145 @@ try {
             define('APP_ENV', 'development');
         }
         
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'debug-connection.php:95','message'=>'Before loading database.php','data'=>['app_env'=>APP_ENV,'old_env'=>$oldEnv],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
         require_once 'config/database.php';
         echo "✓ Database config loaded<br>";
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'debug-connection.php:122','message'=>'After loading database.php','data'=>['pdo_exists'=>isset($pdo),'globals_pdo_exists'=>isset($GLOBALS['pdo']),'db_class_exists'=>class_exists('Database')],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
+        // Check if global $pdo exists - this is critical for Database class
+        $globalPdoExists = isset($GLOBALS['pdo']);
+        $localPdoExists = isset($pdo);
+        
+        if (!$globalPdoExists && !$localPdoExists) {
+            echo "⚠ Warning: Global \$pdo variable not set after loading database.php<br>";
+            echo "This will cause Database::getInstance() to fail!<br>";
+            // #region agent log
+            file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'B','location'=>'debug-connection.php:131','message'=>'Global pdo missing','data'=>['has_globals_pdo'=>$globalPdoExists,'has_local_pdo'=>$localPdoExists],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
+            
+            // Try to set it manually
+            if (isset($pdo)) {
+                $GLOBALS['pdo'] = $pdo;
+                echo "✓ Set global \$pdo from local variable<br>";
+            }
+        } else {
+            echo "✓ Global \$pdo variable is set<br>";
+        }
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'C','location'=>'debug-connection.php:142','message'=>'Before Database::getInstance()','data'=>['global_pdo_set'=>isset($GLOBALS['pdo'])],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
+        // Check if Database class exists before trying to use it
+        if (!class_exists('Database')) {
+            throw new Exception('Database class not found after loading database.php');
+        }
         
         $db = Database::getInstance();
         echo "✓ Database instance created<br>";
         
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'C','location'=>'debug-connection.php:116','message'=>'After Database::getInstance()','data'=>['db_class'=>get_class($db)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'debug-connection.php:120','message'=>'Before fetchOne query','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
         $result = $db->fetchOne("SELECT 1 as test");
         echo "✓ Database class query successful! Result: " . $result['test'] . "<br><br>";
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'D','location'=>'debug-connection.php:125','message'=>'After fetchOne query','data'=>['result'=>$result],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
     } catch (Exception $e) {
         echo "✗ Database class failed!<br>";
         echo "Error: " . htmlspecialchars($e->getMessage()) . "<br>";
         echo "File: " . $e->getFile() . "<br>";
-        echo "Line: " . $e->getLine() . "<br><br>";
+        echo "Line: " . $e->getLine() . "<br>";
+        echo "Trace: <pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre><br><br>";
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'debug-connection.php:135','message'=>'Exception caught','data'=>['error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'trace'=>$e->getTraceAsString()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+    } catch (Error $e) {
+        echo "✗ Fatal error occurred!<br>";
+        echo "Error: " . htmlspecialchars($e->getMessage()) . "<br>";
+        echo "File: " . $e->getFile() . "<br>";
+        echo "Line: " . $e->getLine() . "<br>";
+        echo "Trace: <pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre><br><br>";
+        
+        // #region agent log
+        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'E','location'=>'debug-connection.php:145','message'=>'Fatal Error caught','data'=>['error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine(),'trace'=>$e->getTraceAsString()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
     }
+    
+    // #region agent log
+    file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'A','location'=>'debug-connection.php:150','message'=>'After Database class test block','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
     
     // Check database tables (using direct PDO connection)
     echo "<h3>Database Tables Check</h3>";
-    $requiredTables = ['users', 'organizations', 'goals', 'projects'];
-    $missingTables = [];
     
-    foreach ($requiredTables as $table) {
-        try {
-            $result = $pdo->query("SHOW TABLES LIKE '{$table}'");
-            if ($result->rowCount() > 0) {
-                echo "✓ Table '{$table}' exists<br>";
-                // Count rows
-                try {
-                    $count = $pdo->query("SELECT COUNT(*) as count FROM {$table}")->fetch();
-                    echo "  - Rows: " . $count['count'] . "<br>";
-                } catch (Exception $e) {
-                    echo "  - Error counting rows: " . htmlspecialchars($e->getMessage()) . "<br>";
+    // #region agent log
+    file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'debug-connection.php:155','message'=>'Starting table check','data'=>['pdo_exists'=>isset($pdo)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    if (!isset($pdo)) {
+        echo "✗ Cannot check tables - PDO connection not available<br><br>";
+    } else {
+        $requiredTables = ['users', 'organizations', 'goals', 'projects'];
+        $missingTables = [];
+        
+        foreach ($requiredTables as $table) {
+            try {
+                $result = $pdo->query("SHOW TABLES LIKE '{$table}'");
+                if ($result->rowCount() > 0) {
+                    echo "✓ Table '{$table}' exists<br>";
+                    // Count rows
+                    try {
+                        $count = $pdo->query("SELECT COUNT(*) as count FROM {$table}")->fetch();
+                        echo "  - Rows: " . $count['count'] . "<br>";
+                        
+                        // #region agent log
+                        file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'debug-connection.php:170','message'=>'Table exists','data'=>['table'=>$table,'row_count'=>$count['count']],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                        // #endregion
+                    } catch (Exception $e) {
+                        echo "  - Error counting rows: " . htmlspecialchars($e->getMessage()) . "<br>";
+                    }
+                } else {
+                    echo "✗ Table '{$table}' does NOT exist - <strong>THIS IS LIKELY THE PROBLEM!</strong><br>";
+                    $missingTables[] = $table;
+                    
+                    // #region agent log
+                    file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'debug-connection.php:178','message'=>'Table missing','data'=>['table'=>$table],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                    // #endregion
                 }
-            } else {
-                echo "✗ Table '{$table}' does NOT exist - <strong>THIS IS LIKELY THE PROBLEM!</strong><br>";
+            } catch (Exception $e) {
+                echo "✗ Error checking table '{$table}': " . htmlspecialchars($e->getMessage()) . "<br>";
                 $missingTables[] = $table;
             }
-        } catch (Exception $e) {
-            echo "✗ Error checking table '{$table}': " . htmlspecialchars($e->getMessage()) . "<br>";
-            $missingTables[] = $table;
         }
-    }
-    
-    if (!empty($missingTables)) {
-        echo "<br><strong style='color: red;'>MISSING TABLES DETECTED!</strong><br>";
-        echo "The following tables are missing: " . implode(', ', $missingTables) . "<br>";
-        echo "<strong>Solution:</strong> Import the database schema file: <code>database/hostinger-complete-schema.sql</code><br>";
-        echo "Go to phpMyAdmin → Select database → Import → Choose file → Go<br><br>";
-    } else {
-        echo "<br>✓ All required tables exist!<br><br>";
+        
+        if (!empty($missingTables)) {
+            echo "<br><strong style='color: red;'>MISSING TABLES DETECTED!</strong><br>";
+            echo "The following tables are missing: " . implode(', ', $missingTables) . "<br>";
+            echo "<strong>Solution:</strong> Import the database schema file: <code>database/hostinger-complete-schema.sql</code><br>";
+            echo "Go to phpMyAdmin → Select database → Import → Choose file → Go<br><br>";
+            
+            // #region agent log
+            file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'run1','hypothesisId'=>'F','location'=>'debug-connection.php:190','message'=>'Missing tables summary','data'=>['missing_tables'=>$missingTables],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
+        } else {
+            echo "<br>✓ All required tables exist!<br><br>";
+        }
     }
     
 } catch (PDOException $e) {

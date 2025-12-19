@@ -2,6 +2,15 @@
 // Projects API endpoint
 header('Content-Type: application/json');
 
+// Authentication check
+if (!isLoggedIn()) {
+    jsonResponse(['success' => false, 'error' => 'Authentication required'], 401);
+    exit;
+}
+
+$currentUser = getCurrentUser();
+$organizationId = $currentUser['organization_id'];
+
 $projectModel = new Project();
 $method = getRequestMethod();
 
@@ -10,7 +19,8 @@ try {
         case 'GET':
             $filters = [
                 'goal_id' => getQueryParam('goal_id'),
-                'search' => getQueryParam('search')
+                'search' => getQueryParam('search'),
+                'organization_id' => $organizationId
             ];
             $projects = $projectModel->getAll($filters);
             jsonResponse(['success' => true, 'data' => $projects]);
@@ -25,6 +35,8 @@ try {
             }
 
             $data = sanitizeInput($postData);
+            // Force organization_id from current user, ignore any from request
+            $data['organization_id'] = $organizationId;
             $errors = $projectModel->validate($data);
 
             if (!empty($errors)) {
@@ -43,6 +55,12 @@ try {
                 jsonResponse(['success' => false, 'error' => 'Project ID required'], 400);
             }
 
+            // Verify project exists and belongs to user's organization
+            $existingProject = $projectModel->getById($id);
+            if (!$existingProject || $existingProject['organization_id'] != $organizationId) {
+                jsonResponse(['success' => false, 'error' => 'Project not found or access denied'], 403);
+            }
+
             $putData = json_decode(file_get_contents('php://input'), true);
 
             if (!validateCsrfToken($putData['csrf_token'] ?? '')) {
@@ -51,6 +69,8 @@ try {
 
             $data = sanitizeInput($putData);
             $data['id'] = $id;
+            // Ensure organization_id cannot be changed
+            $data['organization_id'] = $organizationId;
             $errors = $projectModel->validate($data);
 
             if (!empty($errors)) {
@@ -67,6 +87,12 @@ try {
             $id = getQueryParam('id');
             if (!$id) {
                 jsonResponse(['success' => false, 'error' => 'Project ID required'], 400);
+            }
+
+            // Verify project exists and belongs to user's organization
+            $project = $projectModel->getById($id);
+            if (!$project || $project['organization_id'] != $organizationId) {
+                jsonResponse(['success' => false, 'error' => 'Project not found or access denied'], 403);
             }
 
             $deleteData = json_decode(file_get_contents('php://input'), true);

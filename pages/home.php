@@ -20,7 +20,7 @@ ob_start();
                 </p>
                 <div class="flex justify-center space-x-4">
                     <?php if (!isLoggedIn()): ?>
-                        <a href="/register" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <a href="/request-organization" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                             Get Started
                         </a>
                         <a href="/login" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold border-2 border-blue-600 hover:bg-blue-50 transition-colors">
@@ -232,7 +232,7 @@ ob_start();
                 Join organisations across the UK who are using Simple Strategic Plans to achieve their goals
             </p>
             <?php if (!isLoggedIn()): ?>
-                <a href="/register" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
+                <a href="/request-organization" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
                     Register Your Organisation
                 </a>
             <?php else: ?>

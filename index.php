@@ -46,11 +46,6 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i', $st
         // Cache headers
         header('Cache-Control: public, max-age=3600');
 
-        // For JS files, allow CORS if needed
-        if ($ext === 'js') {
-            header('Access-Control-Allow-Origin: *');
-        }
-
         // Output the file
         readfile($filePath);
         exit;
@@ -162,6 +157,8 @@ if (strpos($route, '/api/') === 0) {
     require 'pages/login.php';
 } elseif ($route === '/register') {
     require 'pages/register.php';
+} elseif ($route === '/request-organization') {
+    require 'pages/request-organization.php';
 } elseif ($route === '/verify-email') {
     require 'pages/verify-email.php';
 } elseif ($route === '/logout') {

@@ -2,6 +2,15 @@
 // Goals API endpoint
 header('Content-Type: application/json');
 
+// Authentication check
+if (!isLoggedIn()) {
+    jsonResponse(['success' => false, 'error' => 'Authentication required'], 401);
+    exit;
+}
+
+$currentUser = getCurrentUser();
+$organizationId = $currentUser['organization_id'];
+
 $goalModel = new Goal();
 $method = getRequestMethod();
 
@@ -14,9 +23,13 @@ try {
                 if (!$goal) {
                     jsonResponse(['success' => false, 'error' => 'Goal not found'], 404);
                 }
+                // Verify goal belongs to user's organization
+                if ($goal['organization_id'] != $organizationId) {
+                    jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
+                }
                 jsonResponse(['success' => true, 'data' => $goal]);
             } else {
-                $goals = $goalModel->getAll();
+                $goals = $goalModel->getAll(['organization_id' => $organizationId]);
                 jsonResponse(['success' => true, 'data' => $goals]);
             }
             break;
@@ -29,6 +42,8 @@ try {
             }
 
             $data = sanitizeInput($postData);
+            // Force organization_id from current user, ignore any from request
+            $data['organization_id'] = $organizationId;
             $errors = $goalModel->validate($data);
 
             if (!empty($errors)) {
@@ -47,6 +62,12 @@ try {
                 jsonResponse(['success' => false, 'error' => 'Goal ID required'], 400);
             }
 
+            // Verify goal exists and belongs to user's organization
+            $existingGoal = $goalModel->getById($id);
+            if (!$existingGoal || $existingGoal['organization_id'] != $organizationId) {
+                jsonResponse(['success' => false, 'error' => 'Goal not found or access denied'], 403);
+            }
+
             $putData = json_decode(file_get_contents('php://input'), true);
 
             if (!validateCsrfToken($putData['csrf_token'] ?? '')) {
@@ -55,6 +76,8 @@ try {
 
             $data = sanitizeInput($putData);
             $data['id'] = $id;
+            // Ensure organization_id cannot be changed
+            $data['organization_id'] = $organizationId;
             $errors = $goalModel->validate($data);
 
             if (!empty($errors)) {
@@ -71,6 +94,12 @@ try {
             $id = getQueryParam('id');
             if (!$id) {
                 jsonResponse(['success' => false, 'error' => 'Goal ID required'], 400);
+            }
+
+            // Verify goal exists and belongs to user's organization
+            $goal = $goalModel->getById($id);
+            if (!$goal || $goal['organization_id'] != $organizationId) {
+                jsonResponse(['success' => false, 'error' => 'Goal not found or access denied'], 403);
             }
 
             $deleteData = json_decode(file_get_contents('php://input'), true);

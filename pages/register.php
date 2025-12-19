@@ -24,14 +24,14 @@ if (isPost()) {
         $organization = getOrganizationByEmailDomain($formData['email']);
 
         if (!$organization) {
-            $errors['email'] = 'No organization found for this email domain. Please contact your administrator.';
+            $errors['email'] = 'No organisation found for this email domain. <a href="/request-organization" class="underline font-medium">Request organisation registration</a> or contact your administrator.';
         } elseif ($organization['status'] !== 'active') {
-            $errors['email'] = 'The organization for this domain is not active. Please contact your administrator.';
+            $errors['email'] = 'The organisation for this domain is not active. Please contact your administrator.';
         } else {
             // Check seat availability
             if (!checkSeatAvailability($domain)) {
                 $usage = $orgModel->getSeatUsage($organization['id']);
-                $errors['email'] = "All seats for this organization are currently allocated ({$usage['seats_used']}/{$usage['seat_allocation']}). Please contact your administrator.";
+                $errors['email'] = "All seats for this organisation are currently allocated ({$usage['seats_used']}/{$usage['seat_allocation']}). Please contact your administrator.";
             }
         }
     }
@@ -91,7 +91,7 @@ ob_start();
         <header class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header' : 'mb-6 text-center' ?>">
             <h1 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header__title' : 'text-3xl font-bold text-gray-900' ?>">Create Account</h1>
             <p class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'mt-2 text-gray-600' : 'mt-2' ?>">
-                Register with your organization email address
+                Register with your organisation email address
             </p>
         </header>
 
@@ -116,9 +116,15 @@ ob_start();
                         autofocus
                     >
                     <?php if (!empty($errors['email'])): ?>
-                        <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question__error-message' : 'mt-1 text-sm text-red-600' ?>"><?= h($errors['email']) ?></p>
+                        <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question__error-message' : 'mt-1 text-sm text-red-600' ?>">
+                            <?php if (strpos($errors['email'], '<a') !== false): ?>
+                                <?= $errors['email'] ?>
+                            <?php else: ?>
+                                <?= h($errors['email']) ?>
+                            <?php endif; ?>
+                        </p>
                     <?php else: ?>
-                        <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_hint-text' : 'mt-1 text-sm text-gray-500' ?>">Use your organization email address</p>
+                        <p class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_hint-text' : 'mt-1 text-sm text-gray-500' ?>">Use your organisation email address</p>
                     <?php endif; ?>
                 </div>
 
@@ -198,8 +204,13 @@ ob_start();
                 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_button-group' : 'space-y-3' ?>">
                     <?= DesignSystem::button('Create Account', null, 'primary', ['type' => 'submit', 'class' => $createAccountButtonClass]) ?>
 
-                    <div class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-center text-sm text-gray-600' : 'text-center' ?>">
-                        Already have an account? <a href="/login" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 hover:text-blue-800 font-medium' : '' ?>">Sign in here</a>
+                    <div class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-center text-sm text-gray-600 space-y-2' : 'text-center space-y-2' ?>">
+                        <div>
+                            Already have an account? <a href="/login" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 hover:text-blue-800 font-medium' : '' ?>">Sign in here</a>
+                        </div>
+                        <div>
+                            Is your organisation not registered? <a href="/request-organization" class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'text-blue-600 hover:text-blue-800 font-medium' : '' ?>">Request organisation registration</a>
+                        </div>
                     </div>
                 </div>
             </form>

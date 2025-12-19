@@ -64,7 +64,7 @@ if (isPost()) {
                 if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
                     $uploadDir = __DIR__ . '/../../static/uploads/organizations/' . $organizationId . '/top-sections';
                     if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0775, true);
+                        mkdir($uploadDir, 0755, true);
                     }
                     // Delete old image if exists
                     if ($imagePath) {
@@ -76,6 +76,8 @@ if (isPost()) {
                     $filename = 'section-' . time() . '.' . $extension;
                     $destination = $uploadDir . '/' . $filename;
                     if (move_uploaded_file($file['tmp_name'], $destination)) {
+                        // Set secure file permissions (non-executable)
+                        chmod($destination, 0644);
                         $imagePath = 'static/uploads/organizations/' . $organizationId . '/top-sections/' . $filename;
                     } else {
                         $errors['image'] = 'Failed to upload image. Please try again.';

@@ -49,11 +49,6 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i', $pa
         // Cache headers
         header('Cache-Control: public, max-age=3600');
 
-        // For JS files, allow CORS if needed
-        if ($ext === 'js') {
-            header('Access-Control-Allow-Origin: *');
-        }
-
         // Output the file
         readfile($filePath);
         exit;

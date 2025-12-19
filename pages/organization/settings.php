@@ -29,7 +29,7 @@ if (!function_exists('processOrganizationImageUpload')) {
 
         $uploadDir = __DIR__ . '/../../static/uploads/organizations/' . $organizationId;
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0775, true);
+            mkdir($uploadDir, 0755, true);
         }
 
         $filename = $field . '-' . time() . '.' . $extension;
@@ -39,6 +39,9 @@ if (!function_exists('processOrganizationImageUpload')) {
             $errors[$field] = "Unable to save {$label}. Please try again.";
             return $existingPath;
         }
+
+        // Set secure file permissions (non-executable)
+        chmod($destination, 0644);
 
         // Delete previous image if provided and different
         if (!empty($existingPath)) {

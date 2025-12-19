@@ -45,10 +45,10 @@ if (isPost()) {
         if (empty($errors)) {
             try {
                 $orgModel->update($id, $formData);
-                setFlashMessage('success', 'Organization updated successfully!');
+                setFlashMessage('success', 'Organisation updated successfully!');
                 redirect('/admin');
             } catch (Exception $e) {
-                $errors['general'] = 'Failed to update organization: ' . $e->getMessage();
+                $errors['general'] = 'Failed to update organisation: ' . $e->getMessage();
             }
         }
     }
@@ -56,13 +56,13 @@ if (isPost()) {
 
 $usage = $orgModel->getSeatUsage($id);
 
-$title = 'Edit Organization - ' . APP_NAME;
+$title = 'Edit Organisation - ' . APP_NAME;
 ob_start();
 ?>
 
 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_!_margin-bottom--4' : 'mb-8' ?>">
     <header class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header' : 'mb-6' ?>">
-        <h1 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header__title' : 'text-3xl font-bold text-gray-900' ?>">Edit Organization</h1>
+        <h1 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_page-header__title' : 'text-3xl font-bold text-gray-900' ?>">Edit Organisation</h1>
     </header>
 
     <?php if (!empty($errors['general'])): ?>
@@ -93,11 +93,11 @@ ob_start();
         <?= csrfField() ?>
 
         <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question-group' : 'bg-white shadow rounded-lg p-6 mb-6' ?>">
-            <h2 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium ds_!_margin-bottom--3' : 'text-lg font-medium text-gray-900 mb-4' ?>">Organization Information</h2>
+            <h2 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium ds_!_margin-bottom--3' : 'text-lg font-medium text-gray-900 mb-4' ?>">Organisation Information</h2>
 
             <div class="<?= DesignSystem::getCurrentSystem() === 'tailwind' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'ds_field-group' ?>">
                 <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question' : 'md:col-span-2' ?>">
-                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="name">Organization Name *</label>
+                    <label class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_label' : 'block text-sm font-medium text-gray-700 mb-1' ?>" for="name">Organisation Name *</label>
                     <input
                         type="text"
                         id="name"
@@ -132,7 +132,6 @@ ob_start();
                         value="<?= h($formData['seat_allocation'] ?? '10') ?>"
                         class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_input' : 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500' ?>"
                         min="1"
-                        max="1000"
                         required
                     >
                     <?php if ($usage['seats_used'] > 0): ?>
@@ -263,7 +262,7 @@ ob_start();
 
         <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_button-group' : 'flex justify-end space-x-3' ?>">
             <?= DesignSystem::button('Cancel', '/admin', 'cancel') ?>
-            <?= DesignSystem::button('Update Organization', null, 'primary', ['type' => 'submit']) ?>
+            <?= DesignSystem::button('Update Organisation', null, 'primary', ['type' => 'submit']) ?>
         </div>
     </form>
 </div>

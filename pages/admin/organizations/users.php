@@ -1,5 +1,5 @@
 <?php
-// View organization users page
+// View organisation users page
 requireSuperAdmin();
 
 $orgModel = new Organization();
@@ -8,13 +8,13 @@ $userModel = new User();
 $orgId = getQueryParam('id');
 
 if (!$orgId) {
-    setFlashMessage('error', 'Organization ID is required');
+    setFlashMessage('error', 'Organisation ID is required');
     redirect('/admin');
 }
 
 $organization = $orgModel->getById($orgId);
 if (!$organization) {
-    setFlashMessage('error', 'Organization not found');
+    setFlashMessage('error', 'Organisation not found');
     redirect('/admin');
 }
 
@@ -35,7 +35,7 @@ ob_start();
                 Domain: <?= h($organization['domain']) ?>
             </p>
         </div>
-        <?= DesignSystem::button('Back to Organizations', '/admin', 'secondary') ?>
+        <?= DesignSystem::button('Back to Organisations', '/admin', 'secondary') ?>
     </header>
 
     <!-- Seat Usage Summary -->
@@ -48,7 +48,7 @@ ob_start();
 
     <!-- Users List -->
     <?php if (empty($users)): ?>
-        <?= DesignSystem::alert('No users found for this organization.', 'info') ?>
+        <?= DesignSystem::alert('No users found for this organisation.', 'info') ?>
     <?php else: ?>
         <div class="bg-white shadow rounded-lg overflow-hidden">
             <div class="overflow-x-auto">
@@ -121,7 +121,7 @@ ob_start();
                                                 <?php if ($user['role'] === 'admin'): ?>
                                                     <?php
                                                     $confirmMessage = $isLastAdmin
-                                                        ? 'WARNING: This is the last admin in the organization. Demoting them will leave the organization without any admins. Are you absolutely sure you want to proceed?'
+                                                        ? 'WARNING: This is the last admin in the organisation. Demoting them will leave the organisation without any admins. Are you absolutely sure you want to proceed?'
                                                         : 'Are you sure you want to demote this user from admin to regular user?';
                                                     ?>
                                                     <form method="POST" action="/admin/users/demote" class="inline" onsubmit="return confirm('<?= h($confirmMessage) ?>');">

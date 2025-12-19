@@ -42,10 +42,10 @@ ob_start();
     <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card-list' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8' ?>">
         <?php
         $stats = [
-            ['label' => 'Total Organizations', 'value' => $totalOrganizations, 'color' => 'blue'],
-            ['label' => 'Active Organizations', 'value' => $activeOrganizations, 'color' => 'green'],
+            ['label' => 'Total Organisations', 'value' => $totalOrganizations, 'color' => 'blue'],
+            ['label' => 'Active Organisations', 'value' => $activeOrganizations, 'color' => 'green'],
             ['label' => 'Total Users', 'value' => $userStats['total_users'] ?? 0, 'color' => 'purple'],
-            ['label' => 'Seats Used', 'value' => ($seatStats['total_seats_used'] ?? 0) . ' / ' . ($seatStats['total_seats_allocated'] ?? 0), 'color' => 'orange'],
+            ['label' => 'Total Seats (All Organisations)', 'value' => ($seatStats['total_seats_used'] ?? 0) . ' / ' . ($seatStats['total_seats_allocated'] ?? 0), 'color' => 'orange'],
         ];
 
         foreach ($stats as $stat):
@@ -67,7 +67,7 @@ ob_start();
         <h2 class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_heading--medium ds_!_margin-bottom--3' : 'text-xl font-semibold text-gray-900 mb-4' ?>">Organizations</h2>
 
         <?php if (empty($organizations)): ?>
-            <?= DesignSystem::alert('No organizations found. <a href="/admin/organizations/new">Create your first organization</a>.', 'info') ?>
+            <?= DesignSystem::alert('No organisations found. <a href="/admin/organizations/new">Create your first organisation</a>.', 'info') ?>
         <?php else: ?>
             <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_card-list' : 'space-y-4' ?>">
                 <?php foreach ($organizations as $org): ?>

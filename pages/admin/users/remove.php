@@ -1,5 +1,5 @@
 <?php
-// Remove user from organization
+// Remove user from organisation
 requireSuperAdmin();
 
 $userModel = new User();
@@ -30,9 +30,9 @@ if (!$user) {
     redirect('/admin/organizations/' . $organizationId . '/users');
 }
 
-// Verify user belongs to the organization
+// Verify user belongs to the organisation
 if ($user['organization_id'] != $organizationId) {
-    setFlashMessage('error', 'User does not belong to this organization');
+    setFlashMessage('error', 'User does not belong to this organisation');
     redirect('/admin/organizations/' . $organizationId . '/users');
 }
 
@@ -42,7 +42,7 @@ if ($user['role'] === 'super_admin') {
     redirect('/admin/organizations/' . $organizationId . '/users');
 }
 
-// Check if this is the last admin in the organization - warn but allow super admin to proceed
+// Check if this is the last admin in the organisation - warn but allow super admin to proceed
 if ($user['role'] === 'admin') {
     $db = Database::getInstance();
     $adminCount = $db->fetchOne(
@@ -54,14 +54,14 @@ if ($user['role'] === 'admin') {
         // Super admin can override, but we'll show a warning
         // The confirmation dialog in the UI should have already warned them
         // Log this action for audit purposes
-        error_log("WARNING: Super admin removed the last admin (user_id: {$userId}) from organization {$organizationId}");
+        error_log("WARNING: Super admin removed the last admin (user_id: {$userId}) from organisation {$organizationId}");
     }
 }
 
 // Remove user (deactivate and free up seat)
 // Note: This is the same as deactivate, but kept for backwards compatibility
 if ($userModel->update($userId, ['status' => 'inactive'])) {
-    setFlashMessage('success', 'User removed from organization successfully. Seat has been freed.');
+    setFlashMessage('success', 'User removed from organisation successfully. Seat has been freed.');
 } else {
     setFlashMessage('error', 'Failed to remove user');
 }

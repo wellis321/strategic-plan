@@ -225,4 +225,15 @@ function asset($path) {
     // Return the full path
     return $base . '/' . $path;
 }
+
+/**
+ * Get all super admin email addresses
+ * @return array Array of email addresses
+ */
+function getSuperAdminEmails() {
+    $db = Database::getInstance();
+    $sql = "SELECT email FROM users WHERE role = 'super_admin' AND status = 'active' AND email_verified = TRUE";
+    $superAdmins = $db->fetchAll($sql);
+    return array_column($superAdmins, 'email');
+}
 ?>

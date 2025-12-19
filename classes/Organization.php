@@ -189,9 +189,7 @@ class Organization {
             if ($seats < 1) {
                 $errors['seat_allocation'] = 'Seat allocation must be at least 1';
             }
-            if ($seats > 1000) {
-                $errors['seat_allocation'] = 'Seat allocation cannot exceed 1000';
-            }
+            // Removed 1000 seat limit - organizations can have unlimited seats
 
             // If updating, check that we're not reducing below current usage
             if (isset($data['id'])) {

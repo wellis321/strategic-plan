@@ -7,6 +7,15 @@ require_once __DIR__ . '/config.php';
 
 // Start session after configuration is loaded
 if (session_status() === PHP_SESSION_NONE) {
+    // Configure secure session cookies before starting session
+    session_set_cookie_params([
+        'lifetime' => SESSION_LIFETIME,
+        'path' => '/',
+        'domain' => '', // Set to your domain in production if needed
+        'secure' => (APP_ENV === 'production'), // HTTPS only in production
+        'httponly' => true, // Prevent JavaScript access
+        'samesite' => 'Strict' // CSRF protection
+    ]);
     session_start();
 }
 

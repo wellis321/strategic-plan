@@ -52,40 +52,69 @@ echo "\$_ENV['DB_HOST']: " . (isset($_ENV['DB_HOST']) ? $_ENV['DB_HOST'] : 'NOT 
 
 // Test 3: Database Connection
 echo "<h2>Database Connection Test</h2>";
+
+// Check if DB_PORT is defined
+if (!defined('DB_PORT')) {
+    echo "⚠ DB_PORT not defined, using default 3306<br>";
+    define('DB_PORT', '3306');
+}
+
+echo "Connection details:<br>";
+echo "- Host: " . DB_HOST . "<br>";
+echo "- Port: " . DB_PORT . "<br>";
+echo "- Database: " . DB_NAME . "<br>";
+echo "- User: " . DB_USER . "<br>";
+echo "- Password: " . (DB_PASS ? "***SET***" : "NOT SET") . "<br><br>";
+
+// Try direct PDO connection first (before loading database.php which might die)
+echo "<h3>Direct PDO Connection Test</h3>";
 try {
-    echo "Loading database config...<br>";
-    require_once 'config/database.php';
-    echo "✓ Database config loaded<br>";
+    $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+    echo "DSN: " . htmlspecialchars($dsn) . "<br>";
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+    echo "✓ Direct PDO connection successful!<br>";
     
-    echo "Creating Database instance...<br>";
-    $db = Database::getInstance();
-    echo "✓ Database instance created<br>";
+    // Test a simple query
+    $stmt = $pdo->query("SELECT 1 as test");
+    $result = $stmt->fetch();
+    echo "✓ Test query successful! Result: " . $result['test'] . "<br><br>";
     
-    echo "Running test query...<br>";
-    $result = $db->fetchOne("SELECT 1 as test");
-    echo "✓ Database connection successful!<br>";
-    echo "Test query result: " . $result['test'] . "<br><br>";
-} catch (Exception $e) {
-    echo "✗ Database connection failed!<br>";
-    echo "Error type: " . get_class($e) . "<br>";
-    echo "Error message: " . htmlspecialchars($e->getMessage()) . "<br>";
-    echo "Error file: " . $e->getFile() . "<br>";
-    echo "Error line: " . $e->getLine() . "<br>";
-    echo "<br>";
-    
-    // Try direct PDO connection
-    echo "<h3>Direct PDO Connection Test</h3>";
+    // Now try through Database class
+    echo "<h3>Database Class Test</h3>";
     try {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        echo "DSN: " . htmlspecialchars($dsn) . "<br>";
-        echo "User: " . htmlspecialchars(DB_USER) . "<br>";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        echo "✓ Direct PDO connection successful!<br>";
-    } catch (PDOException $e) {
-        echo "✗ Direct PDO connection failed: " . htmlspecialchars($e->getMessage()) . "<br>";
+        // Temporarily set APP_ENV to development to avoid die()
+        $oldEnv = defined('APP_ENV') ? APP_ENV : null;
+        define('APP_ENV', 'development');
+        
+        require_once 'config/database.php';
+        echo "✓ Database config loaded<br>";
+        
+        $db = Database::getInstance();
+        echo "✓ Database instance created<br>";
+        
+        $result = $db->fetchOne("SELECT 1 as test");
+        echo "✓ Database class query successful! Result: " . $result['test'] . "<br><br>";
+    } catch (Exception $e) {
+        echo "✗ Database class failed!<br>";
+        echo "Error: " . htmlspecialchars($e->getMessage()) . "<br><br>";
     }
-    echo "<br>";
+    
+} catch (PDOException $e) {
+    echo "✗ Direct PDO connection failed!<br>";
+    echo "Error code: " . $e->getCode() . "<br>";
+    echo "Error message: " . htmlspecialchars($e->getMessage()) . "<br><br>";
+    
+    // Common error messages and solutions
+    if (strpos($e->getMessage(), 'Unknown database') !== false) {
+        echo "<strong>Solution:</strong> The database '" . DB_NAME . "' does not exist. Create it in your Hostinger control panel.<br><br>";
+    } elseif (strpos($e->getMessage(), 'Access denied') !== false) {
+        echo "<strong>Solution:</strong> Database credentials are incorrect. Check your username and password in .env file.<br><br>";
+    } elseif (strpos($e->getMessage(), 'Connection refused') !== false || strpos($e->getMessage(), 'Connection timed out') !== false) {
+        echo "<strong>Solution:</strong> Cannot connect to database server. Check if DB_HOST is correct (might need to be different than 'localhost' on Hostinger).<br><br>";
+    }
 }
 
 // Test 4: Required Classes

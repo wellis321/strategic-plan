@@ -23,27 +23,40 @@ if (isPost()) {
     }
 
     if (empty($errors)) {
-        $user = $userModel->authenticate($email, $password);
-
-        if ($user) {
-            // Check email_verified (can be 0/1 from database or boolean)
+        // First, check if user exists and get user data
+        $user = $userModel->getByEmail($email);
+        
+        if (!$user) {
+            // User doesn't exist - show generic error for security
+            $errors['general'] = 'Invalid email or password';
+        } elseif (!password_verify($password, $user['password_hash'])) {
+            // Password is incorrect - show generic error for security
+            $errors['general'] = 'Invalid email or password';
+        } else {
+            // Password is correct, now check verification and status
             $emailVerified = (bool)$user['email_verified'] || $user['email_verified'] === 1 || $user['email_verified'] === '1';
-
+            
             if (!$emailVerified) {
-                $errors['general'] = 'Please verify your email address before logging in. Check your inbox for the verification link.';
-            } elseif ($user['status'] !== 'active') {
+                $errors['general'] = 'Please verify your email address before logging in. Check your inbox for the verification link. If you need a new verification email, please contact support.';
+            } elseif ($user['status'] !== 'active' && $user['status'] !== 'pending_verification') {
                 $errors['general'] = 'Your account is not active. Please contact your administrator.';
             } else {
-                login($user);
-                setFlashMessage('success', 'Welcome back, ' . ($user['first_name'] ?? $user['email']) . '!');
+                // User is verified and active - proceed with login
+                // Use authenticate() to handle status updates and last login
+                $authenticatedUser = $userModel->authenticate($email, $password);
+                if ($authenticatedUser) {
+                    login($authenticatedUser);
+                    setFlashMessage('success', 'Welcome back, ' . ($authenticatedUser['first_name'] ?? $authenticatedUser['email']) . '!');
 
-                // Redirect to intended page or dashboard
-                $redirectTo = $_SESSION['redirect_after_login'] ?? '/';
-                unset($_SESSION['redirect_after_login']);
-                redirect($redirectTo);
+                    // Redirect to intended page or dashboard
+                    $redirectTo = $_SESSION['redirect_after_login'] ?? '/';
+                    unset($_SESSION['redirect_after_login']);
+                    redirect($redirectTo);
+                } else {
+                    // This shouldn't happen, but handle it just in case
+                    $errors['general'] = 'Unable to complete login. Please try again or contact support.';
+                }
             }
-        } else {
-            $errors['general'] = 'Invalid email or password';
         }
     }
 }

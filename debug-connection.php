@@ -53,13 +53,39 @@ echo "\$_ENV['DB_HOST']: " . (isset($_ENV['DB_HOST']) ? $_ENV['DB_HOST'] : 'NOT 
 // Test 3: Database Connection
 echo "<h2>Database Connection Test</h2>";
 try {
+    echo "Loading database config...<br>";
     require_once 'config/database.php';
+    echo "✓ Database config loaded<br>";
+    
+    echo "Creating Database instance...<br>";
     $db = Database::getInstance();
+    echo "✓ Database instance created<br>";
+    
+    echo "Running test query...<br>";
     $result = $db->fetchOne("SELECT 1 as test");
     echo "✓ Database connection successful!<br>";
     echo "Test query result: " . $result['test'] . "<br><br>";
 } catch (Exception $e) {
-    echo "✗ Database connection failed: " . $e->getMessage() . "<br><br>";
+    echo "✗ Database connection failed!<br>";
+    echo "Error type: " . get_class($e) . "<br>";
+    echo "Error message: " . htmlspecialchars($e->getMessage()) . "<br>";
+    echo "Error file: " . $e->getFile() . "<br>";
+    echo "Error line: " . $e->getLine() . "<br>";
+    echo "<br>";
+    
+    // Try direct PDO connection
+    echo "<h3>Direct PDO Connection Test</h3>";
+    try {
+        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+        echo "DSN: " . htmlspecialchars($dsn) . "<br>";
+        echo "User: " . htmlspecialchars(DB_USER) . "<br>";
+        $pdo = new PDO($dsn, DB_USER, DB_PASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        echo "✓ Direct PDO connection successful!<br>";
+    } catch (PDOException $e) {
+        echo "✗ Direct PDO connection failed: " . htmlspecialchars($e->getMessage()) . "<br>";
+    }
+    echo "<br>";
 }
 
 // Test 4: Required Classes

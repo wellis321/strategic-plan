@@ -11,6 +11,9 @@ ob_start();
     <section class="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
+                <div class="flex justify-center mb-6">
+                    <img src="/static/images/strategic-black-logo.png" alt="Simple Strategic Plans" class="h-16 md:h-20 w-auto">
+                </div>
                 <h1 class="text-5xl font-bold text-gray-900 mb-6">
                     Simple Strategic Plans
                 </h1>

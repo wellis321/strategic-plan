@@ -13,7 +13,12 @@
         <script src="<?= $jsFile ?>"></script>
     <?php endforeach; ?>
 
-    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon_io/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon_io/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon_io/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/favicon_io/apple-touch-icon.png">
+    <link rel="manifest" href="/static/images/favicon_io/site.webmanifest">
 </head>
 <body>
     <div class="<?= DesignSystem::getPageClass() ?> flex flex-col">
@@ -21,8 +26,9 @@
             <div class="<?= DesignSystem::getContainerClass() ?>">
                 <div class="flex justify-between items-center py-4">
                     <div class="flex items-center">
-                        <a class="text-xl font-bold text-white hover:text-blue-100 transition-colors" href="/">
-                            Simple Strategic Plans
+                        <a class="flex items-center space-x-3 hover:opacity-90 transition-opacity" href="/">
+                            <img src="/static/images/sttrategic-white-logo.png" alt="Simple Strategic Plans" class="h-8 w-auto">
+                            <span class="text-xl font-bold text-white hidden sm:inline">Simple Strategic Plans</span>
                         </a>
                     </div>
 
@@ -170,7 +176,7 @@
                 <div class="py-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                         <div>
-                            <h3 class="font-semibold text-white mb-3 text-lg">Simple Strategic Plans</h3>
+                            <img src="/static/images/sttrategic-white-logo.png" alt="Simple Strategic Plans" class="h-8 w-auto mb-3">
                             <p class="text-sm text-slate-200">
                                 The comprehensive platform for organisations to create, manage, and track their strategic plans.
                             </p>

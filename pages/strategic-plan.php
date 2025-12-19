@@ -50,41 +50,137 @@ try {
     throw $e;
 }
 
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'D','location'=>'strategic-plan.php:40','message'=>'Before getting active plan','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Get active plan or create default if none exists
-$activePlan = $planModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);
-$activePlan = !empty($activePlan) ? $activePlan[0] : null;
+try {
+    $activePlan = $planModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'D','location'=>'strategic-plan.php:45','message'=>'getAll active plans result','data'=>['count'=>count($activePlan)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    $activePlan = !empty($activePlan) ? $activePlan[0] : null;
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'D','location'=>'strategic-plan.php:50','message'=>'Exception getting active plan','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    $activePlan = null;
+}
 
 // If no active plan, get the most recent published plan or create a default
 if (!$activePlan) {
-    $allPlans = $planModel->getAll(['organization_id' => $organizationId]);
-    if (!empty($allPlans)) {
-        $activePlan = $allPlans[0];
-    } else {
-        // Create a default plan for this organization
-        try {
-            $defaultPlanId = $planModel->create([
-                'organization_id' => $organizationId,
-                'title' => 'Strategic Plan ' . date('Y'),
-                'slug' => 'plan-' . date('Y'),
-                'status' => 'published',
-                'is_active' => true,
-                'created_by' => $currentUser['id']
-            ]);
-            $activePlan = $planModel->getById($defaultPlanId);
-        } catch (Exception $e) {
-            // If creation fails, continue without plan
-            $activePlan = null;
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'E','location'=>'strategic-plan.php:57','message'=>'No active plan, getting all plans','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    try {
+        $allPlans = $planModel->getAll(['organization_id' => $organizationId]);
+        
+        // #region agent log
+        @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'E','location'=>'strategic-plan.php:62','message'=>'All plans retrieved','data'=>['count'=>count($allPlans)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        
+        if (!empty($allPlans)) {
+            $activePlan = $allPlans[0];
+        } else {
+            // #region agent log
+            @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'F','location'=>'strategic-plan.php:68','message'=>'No plans exist, creating default','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+            // #endregion
+            
+            // Create a default plan for this organization
+            try {
+                $defaultPlanId = $planModel->create([
+                    'organization_id' => $organizationId,
+                    'title' => 'Strategic Plan ' . date('Y'),
+                    'slug' => 'plan-' . date('Y'),
+                    'status' => 'published',
+                    'is_active' => true,
+                    'created_by' => $currentUser['id']
+                ]);
+                
+                // #region agent log
+                @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'F','location'=>'strategic-plan.php:81','message'=>'Default plan created','data'=>['plan_id'=>$defaultPlanId],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                // #endregion
+                
+                $activePlan = $planModel->getById($defaultPlanId);
+            } catch (Exception $e) {
+                // #region agent log
+                @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'F','location'=>'strategic-plan.php:87','message'=>'Exception creating default plan','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+                // #endregion
+                // If creation fails, continue without plan
+                $activePlan = null;
+            }
         }
+    } catch (Exception $e) {
+        // #region agent log
+        @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'E','location'=>'strategic-plan.php:94','message'=>'Exception getting all plans','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+        // #endregion
+        $activePlan = null;
     }
 }
 
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:100','message'=>'Before getting plan data','data'=>['plan_id'=>$activePlan['id']??null],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Get plan-specific data
 $planId = $activePlan ? $activePlan['id'] : null;
-$sections = $planId ? $sectionModel->getAll(['plan_id' => $planId]) : [];
-$goals = $planId ? $goalModel->getAll(['plan_id' => $planId]) : [];
-$projects = $planId ? $projectModel->getAll(['plan_id' => $planId]) : [];
+
+try {
+    $sections = $planId ? $sectionModel->getAll(['plan_id' => $planId]) : [];
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:107','message'=>'Sections retrieved','data'=>['count'=>count($sections)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:111','message'=>'Exception getting sections','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    $sections = [];
+}
+
+try {
+    $goals = $planId ? $goalModel->getAll(['plan_id' => $planId]) : [];
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:117','message'=>'Goals retrieved','data'=>['count'=>count($goals)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:121','message'=>'Exception getting goals','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    $goals = [];
+}
+
+try {
+    $projects = $planId ? $projectModel->getAll(['plan_id' => $planId]) : [];
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:127','message'=>'Projects retrieved','data'=>['count'=>count($projects)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'G','location'=>'strategic-plan.php:131','message'=>'Exception getting projects','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    $projects = [];
+}
+
 // Get top sections for this plan (plan-specific + organization-wide)
-$topSections = $planId ? $topSectionModel->getAll(['organization_id' => $organizationId, 'plan_id' => $planId, 'is_active' => true]) : [];
+try {
+    $topSections = $planId ? $topSectionModel->getAll(['organization_id' => $organizationId, 'plan_id' => $planId, 'is_active' => true]) : [];
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'H','location'=>'strategic-plan.php:139','message'=>'Top sections retrieved','data'=>['count'=>count($topSections)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'H','location'=>'strategic-plan.php:143','message'=>'Exception getting top sections','data'=>['error'=>$e->getMessage()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    $topSections = [];
+}
 
 // Group projects by goal
 $projectsByGoal = [];

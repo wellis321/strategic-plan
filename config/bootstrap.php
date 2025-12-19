@@ -8,11 +8,13 @@ require_once __DIR__ . '/config.php';
 // Start session after configuration is loaded
 if (session_status() === PHP_SESSION_NONE) {
     // Configure secure session cookies before starting session
+    // Check if HTTPS is actually available before setting secure flag
+    $isSecure = (APP_ENV === 'production' && (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'));
     session_set_cookie_params([
         'lifetime' => SESSION_LIFETIME,
         'path' => '/',
         'domain' => '', // Set to your domain in production if needed
-        'secure' => (APP_ENV === 'production'), // HTTPS only in production
+        'secure' => $isSecure, // Only use secure cookies if HTTPS is actually available
         'httponly' => true, // Prevent JavaScript access
         'samesite' => 'Strict' // CSRF protection
     ]);
@@ -46,7 +48,10 @@ if (getenv('APP_ENV') === 'development') {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
-    error_reporting(0);
+    // In production, log errors but don't display them
+    error_reporting(E_ALL);
     ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    ini_set('error_log', __DIR__ . '/../error_log');
 }
 ?>

@@ -1,16 +1,57 @@
 <?php
 // Registration page
-$userModel = new User();
-$orgModel = new Organization();
-
 $errors = [];
 $formData = [];
+
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'A','location'=>'register.php:5','message'=>'Register page loading','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
+// Initialize models with error handling
+try {
+    // #region agent log
+    @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'B','location'=>'register.php:12','message'=>'Before creating User model','data'=>['db_class_exists'=>class_exists('Database')],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    $userModel = new User();
+    
+    // #region agent log
+    @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'B','location'=>'register.php:17','message'=>'User model created','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    $orgModel = new Organization();
+    
+    // #region agent log
+    @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'B','location'=>'register.php:21','message'=>'Organization model created','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'C','location'=>'register.php:25','message'=>'Exception creating models','data'=>['error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    // If database/models fail to initialize, show error
+    $errors['general'] = 'System error: Unable to initialize database connection. Please contact the administrator.';
+    error_log('Registration page error: ' . $e->getMessage());
+    // Still allow page to render so user can see the error
+    $userModel = null;
+    $orgModel = null;
+} catch (Error $e) {
+    // #region agent log
+    @file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'register-page','hypothesisId'=>'C','location'=>'register.php:33','message'=>'Fatal error creating models','data'=>['error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    
+    $errors['general'] = 'System error: Fatal error occurred. Please contact the administrator.';
+    error_log('Registration page fatal error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    $userModel = null;
+    $orgModel = null;
+}
 
 if (isLoggedIn()) {
     redirect('/');
 }
 
-if (isPost()) {
+if (isPost() && $userModel && $orgModel) {
     $postData = getPostData();
     $formData = sanitizeInput($postData);
 
@@ -97,6 +138,10 @@ ob_start();
 
         <?php if (!empty($errors['general'])): ?>
             <?= DesignSystem::alert($errors['general'], 'error') ?>
+        <?php endif; ?>
+        
+        <?php if (!$userModel || !$orgModel): ?>
+            <?= DesignSystem::alert('System error: Database connection failed. Please contact the administrator or check that the database tables have been created.', 'error') ?>
         <?php endif; ?>
 
         <div class="<?= DesignSystem::getCurrentSystem() === 'sgds' ? 'ds_question-group' : 'bg-white shadow rounded-lg p-6' ?>">

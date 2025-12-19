@@ -1,9 +1,21 @@
 <?php
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'A','location'=>'bootstrap.php:3','message'=>'Bootstrap starting','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Load environment variables first
 require_once __DIR__ . '/env.php';
 
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'A','location'=>'bootstrap.php:8','message'=>'env.php loaded','data'=>['app_env'=>defined('APP_ENV')?APP_ENV:'not defined'],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Load configuration (this sets session settings)
 require_once __DIR__ . '/config.php';
+
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'A','location'=>'bootstrap.php:13','message'=>'config.php loaded','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
 
 // Start session after configuration is loaded
 if (session_status() === PHP_SESSION_NONE) {
@@ -22,10 +34,26 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Load database connection
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'B','location'=>'bootstrap.php:28','message'=>'Before loading database.php','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 require_once __DIR__ . '/database.php';
 
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'B','location'=>'bootstrap.php:33','message'=>'database.php loaded','data'=>['pdo_exists'=>isset($GLOBALS['pdo']),'pdo_is_null'=>$GLOBALS['pdo']??null===null],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Load core classes
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'B','location'=>'bootstrap.php:37','message'=>'Before loading Database class','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 require_once __DIR__ . '/../classes/Database.php';
+
+// #region agent log
+@file_put_contents('/Users/wellis/Desktop/Cursor/strategic-plan/.cursor/debug.log', json_encode(['sessionId'=>'debug-session','runId'=>'bootstrap','hypothesisId'=>'B','location'=>'bootstrap.php:42','message'=>'Database class loaded','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
 require_once __DIR__ . '/../classes/Goal.php';
 require_once __DIR__ . '/../classes/Project.php';
 require_once __DIR__ . '/../classes/DesignSystem.php';

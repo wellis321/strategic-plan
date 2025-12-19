@@ -84,34 +84,9 @@ if (strpos($path, '/api/') === 0) {
     $route = $path ?: '/';
 }
 
-// Debug mode (remove in production)
-if (defined('APP_ENV') && APP_ENV === 'development' && isset($_GET['debug_route'])) {
-    echo "<pre>Request URI: " . htmlspecialchars($_SERVER['REQUEST_URI']) . "\n";
-    echo "Script Name: " . htmlspecialchars($_SERVER['SCRIPT_NAME']) . "\n";
-    echo "Path: " . htmlspecialchars($path) . "\n";
-    echo "Route: " . htmlspecialchars($route) . "\n";
-    echo "strpos('/api/') check: " . (strpos($route, '/api/') === 0 ? 'TRUE' : 'FALSE') . "</pre>";
-    exit;
-}
-
-// Temporary: Always show debug for API routes in development
-if (strpos($route, '/api/') === 0 && defined('APP_ENV') && APP_ENV === 'development') {
-    // Uncomment to debug:
-    // header('Content-Type: text/plain');
-    // echo "Route: $route\n";
-    // echo "Path: $path\n";
-    // echo "REQUEST_URI: " . $_SERVER['REQUEST_URI'] . "\n";
-    // exit;
-}
-
 // Handle routes
 // API routes should be checked first
-// Debug: log the route for API requests
 if (strpos($route, '/api/') === 0) {
-    // Temporary debug - remove after fixing
-    if (defined('APP_ENV') && APP_ENV === 'development') {
-        error_log("API Route Debug - Route: '$route', REQUEST_URI: '" . $_SERVER['REQUEST_URI'] . "', Path: '$path'");
-    }
 
     // Route API requests
     if ($route === '/api/test-route') {

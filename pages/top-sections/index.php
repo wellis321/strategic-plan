@@ -143,8 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     order[id] = index;
                 });
 
-                console.log('Sending reorder request:', order);
-
                 fetch('/api/top-sections/reorder', {
                     method: 'POST',
                     headers: {

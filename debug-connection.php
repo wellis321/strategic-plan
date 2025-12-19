@@ -87,7 +87,9 @@ try {
     try {
         // Temporarily set APP_ENV to development to avoid die()
         $oldEnv = defined('APP_ENV') ? APP_ENV : null;
-        define('APP_ENV', 'development');
+        if (!defined('APP_ENV')) {
+            define('APP_ENV', 'development');
+        }
         
         require_once 'config/database.php';
         echo "✓ Database config loaded<br>";
@@ -102,6 +104,42 @@ try {
         echo "Error: " . htmlspecialchars($e->getMessage()) . "<br>";
         echo "File: " . $e->getFile() . "<br>";
         echo "Line: " . $e->getLine() . "<br><br>";
+    }
+    
+    // Check database tables (using direct PDO connection)
+    echo "<h3>Database Tables Check</h3>";
+    $requiredTables = ['users', 'organizations', 'goals', 'projects'];
+    $missingTables = [];
+    
+    foreach ($requiredTables as $table) {
+        try {
+            $result = $pdo->query("SHOW TABLES LIKE '{$table}'");
+            if ($result->rowCount() > 0) {
+                echo "✓ Table '{$table}' exists<br>";
+                // Count rows
+                try {
+                    $count = $pdo->query("SELECT COUNT(*) as count FROM {$table}")->fetch();
+                    echo "  - Rows: " . $count['count'] . "<br>";
+                } catch (Exception $e) {
+                    echo "  - Error counting rows: " . htmlspecialchars($e->getMessage()) . "<br>";
+                }
+            } else {
+                echo "✗ Table '{$table}' does NOT exist - <strong>THIS IS LIKELY THE PROBLEM!</strong><br>";
+                $missingTables[] = $table;
+            }
+        } catch (Exception $e) {
+            echo "✗ Error checking table '{$table}': " . htmlspecialchars($e->getMessage()) . "<br>";
+            $missingTables[] = $table;
+        }
+    }
+    
+    if (!empty($missingTables)) {
+        echo "<br><strong style='color: red;'>MISSING TABLES DETECTED!</strong><br>";
+        echo "The following tables are missing: " . implode(', ', $missingTables) . "<br>";
+        echo "<strong>Solution:</strong> Import the database schema file: <code>database/hostinger-complete-schema.sql</code><br>";
+        echo "Go to phpMyAdmin → Select database → Import → Choose file → Go<br><br>";
+    } else {
+        echo "<br>✓ All required tables exist!<br><br>";
     }
     
 } catch (PDOException $e) {

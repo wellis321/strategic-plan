@@ -99,7 +99,9 @@ try {
         echo "✓ Database class query successful! Result: " . $result['test'] . "<br><br>";
     } catch (Exception $e) {
         echo "✗ Database class failed!<br>";
-        echo "Error: " . htmlspecialchars($e->getMessage()) . "<br><br>";
+        echo "Error: " . htmlspecialchars($e->getMessage()) . "<br>";
+        echo "File: " . $e->getFile() . "<br>";
+        echo "Line: " . $e->getLine() . "<br><br>";
     }
     
 } catch (PDOException $e) {
@@ -167,8 +169,89 @@ try {
 }
 echo "<br>";
 
-echo "<h2>All Tests Complete</h2>";
-echo "<p><strong>If all tests pass, the issue is likely in the registration form processing logic.</strong></p>";
-echo "<p><strong>Check the error_log file in the root directory for detailed error messages.</strong></p>";
+// Test 8: Registration Page Dependencies & Database Tables
+echo "<h2>Registration Page Dependencies Test</h2>";
+try {
+    // Check if database tables exist (using the PDO connection from earlier)
+    if (isset($pdo)) {
+        echo "<h3>Database Tables Check</h3>";
+        $tables = ['users', 'organizations'];
+        foreach ($tables as $table) {
+            try {
+                $result = $pdo->query("SHOW TABLES LIKE '{$table}'");
+                if ($result->rowCount() > 0) {
+                    echo "✓ Table '{$table}' exists<br>";
+                    // Count rows
+                    $count = $pdo->query("SELECT COUNT(*) as count FROM {$table}")->fetch();
+                    echo "  - Rows: " . $count['count'] . "<br>";
+                } else {
+                    echo "✗ Table '{$table}' does NOT exist - <strong>THIS IS LIKELY THE PROBLEM!</strong><br>";
+                    echo "  <strong>Solution:</strong> Import the database schema from database/schema.sql<br>";
+                }
+            } catch (Exception $e) {
+                echo "✗ Error checking table '{$table}': " . htmlspecialchars($e->getMessage()) . "<br>";
+            }
+        }
+        echo "<br>";
+    }
+    
+    // Try loading bootstrap to check for errors
+    echo "<h3>Bootstrap & Classes Test</h3>";
+    try {
+        // Temporarily override APP_ENV to see errors
+        $originalEnv = getenv('APP_ENV');
+        putenv('APP_ENV=development');
+        
+        require_once 'config/bootstrap.php';
+        echo "✓ Bootstrap loaded successfully<br>";
+        
+        // Check classes
+        if (class_exists('User')) {
+            echo "✓ User class loaded<br>";
+        } else {
+            echo "✗ User class NOT found<br>";
+        }
+        
+        if (class_exists('Organization')) {
+            echo "✓ Organization class loaded<br>";
+        } else {
+            echo "✗ Organization class NOT found<br>";
+        }
+        
+        // Check critical functions
+        $criticalFunctions = ['isLoggedIn', 'isPost', 'getPostData', 'sanitizeInput', 'extractDomainFromEmail', 'getOrganizationByEmailDomain', 'checkSeatAvailability'];
+        foreach ($criticalFunctions as $func) {
+            if (function_exists($func)) {
+                echo "✓ Function {$func} exists<br>";
+            } else {
+                echo "✗ Function {$func} NOT found - <strong>THIS COULD CAUSE 500 ERROR!</strong><br>";
+            }
+        }
+        
+        // Restore original env
+        if ($originalEnv) {
+            putenv('APP_ENV=' . $originalEnv);
+        }
+        
+    } catch (Exception $e) {
+        echo "✗ Error loading bootstrap!<br>";
+        echo "Error: " . htmlspecialchars($e->getMessage()) . "<br>";
+        echo "File: " . $e->getFile() . "<br>";
+        echo "Line: " . $e->getLine() . "<br>";
+        echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre><br>";
+    }
+    
+} catch (Exception $e) {
+    echo "✗ Error in dependency test: " . htmlspecialchars($e->getMessage()) . "<br>";
+}
+
+echo "<br><h2>All Tests Complete</h2>";
+echo "<p><strong>Most Common Issues:</strong></p>";
+echo "<ul>";
+echo "<li>Missing database tables - Import database/schema.sql</li>";
+echo "<li>Missing functions - Check if all files are uploaded</li>";
+echo "<li>Check error_log file in root directory for detailed errors</li>";
+echo "</ul>";
+echo "<p><strong>To see registration page errors:</strong> Temporarily set APP_ENV=development in .env file</p>";
 ?>
 

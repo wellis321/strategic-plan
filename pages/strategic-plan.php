@@ -1,6 +1,15 @@
 <?php
 // Strategic Plan overview page
+// #region agent log
+$logPath = __DIR__ . '/../.cursor/debug.log';
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'A','location'=>'strategic-plan.php:4','message'=>'Page loading','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 requireLogin();
+
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'A','location'=>'strategic-plan.php:8','message'=>'After requireLogin','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
 
 $goalModel = new Goal();
 $projectModel = new Project();
@@ -8,12 +17,38 @@ $sectionModel = new StrategicPlanSection();
 $planModel = new StrategicPlan();
 $topSectionModel = new OrganizationTopSection();
 
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'B','location'=>'strategic-plan.php:16','message'=>'Models created','data'=>[],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 // Get current user's organization
 $currentUser = getCurrentUser();
+
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'B','location'=>'strategic-plan.php:21','message'=>'Current user retrieved','data'=>['user_id'=>$currentUser['id']??null,'org_id'=>$currentUser['organization_id']??null],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
 $organizationId = $currentUser['organization_id'];
 
 $orgModel = new Organization();
-$organization = $orgModel->getByIdWithValues($organizationId);
+
+// #region agent log
+@file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'C','location'=>'strategic-plan.php:27','message'=>'Before getByIdWithValues','data'=>['org_id'=>$organizationId],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+// #endregion
+
+try {
+    $organization = $orgModel->getByIdWithValues($organizationId);
+    
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'C','location'=>'strategic-plan.php:32','message'=>'getByIdWithValues successful','data'=>['org_exists'=>!empty($organization)],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+} catch (Exception $e) {
+    // #region agent log
+    @file_put_contents($logPath, json_encode(['sessionId'=>'debug-session','runId'=>'strategic-plan','hypothesisId'=>'C','location'=>'strategic-plan.php:36','message'=>'Exception in getByIdWithValues','data'=>['error'=>$e->getMessage(),'file'=>$e->getFile(),'line'=>$e->getLine()],'timestamp'=>time()*1000])."\n", FILE_APPEND);
+    // #endregion
+    error_log('Error getting organization: ' . $e->getMessage());
+    throw $e;
+}
 
 // Get active plan or create default if none exists
 $activePlan = $planModel->getAll(['organization_id' => $organizationId, 'is_active' => true]);

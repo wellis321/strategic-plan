@@ -255,7 +255,7 @@ class Organization {
     }
 
     public function getValues($organizationId) {
-        $sql = "SELECT value_text, sort_order
+        $sql = "SELECT value as value_text, sort_order
                 FROM organization_values
                 WHERE organization_id = :id
                 ORDER BY sort_order ASC, id ASC";
@@ -273,7 +273,7 @@ class Organization {
                 if (!empty($valueText)) {
                     $this->db->insert('organization_values', [
                         'organization_id' => $organizationId,
-                        'value_text' => $valueText,
+                        'value' => $valueText, // Column name is 'value' not 'value_text'
                         'sort_order' => $index
                     ]);
                 }

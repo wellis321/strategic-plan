@@ -47,9 +47,19 @@ class Database {
     }
 
     public function query($sql, $params = []) {
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (PDOException $e) {
+            // Check if error is due to missing table
+            if ($e->getCode() === '42S02' || strpos($e->getMessage(), "doesn't exist") !== false) {
+                error_log('Database table missing: ' . $e->getMessage());
+                throw new Exception('Database tables not initialized. Please import the database schema.', 0, $e);
+            }
+            // Re-throw other PDO exceptions
+            throw $e;
+        }
     }
 
     public function fetchAll($sql, $params = []) {

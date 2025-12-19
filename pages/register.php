@@ -62,7 +62,18 @@ if (isPost() && $userModel && $orgModel) {
         $errors['email'] = 'Invalid email format';
     } else {
         // Check if organization exists for this domain
-        $organization = getOrganizationByEmailDomain($formData['email']);
+        try {
+            $organization = getOrganizationByEmailDomain($formData['email']);
+        } catch (Exception $e) {
+            // Handle missing database tables gracefully
+            if (strpos($e->getMessage(), 'Database tables not initialized') !== false || 
+                strpos($e->getMessage(), "doesn't exist") !== false) {
+                $errors['general'] = 'Database tables are missing. The database schema needs to be imported. Please import the database schema file (database/hostinger-complete-schema.sql) via phpMyAdmin.';
+                $organization = null;
+            } else {
+                throw $e; // Re-throw other exceptions
+            }
+        }
 
         if (!$organization) {
             $errors['email'] = 'No organisation found for this email domain. <a href="/request-organization" class="underline font-medium">Request organisation registration</a> or contact your administrator.';
@@ -78,8 +89,18 @@ if (isPost() && $userModel && $orgModel) {
     }
 
     // Validate user data
-    $userErrors = $userModel->validate($formData);
-    $errors = array_merge($errors, $userErrors);
+    try {
+        $userErrors = $userModel->validate($formData);
+        $errors = array_merge($errors, $userErrors);
+    } catch (Exception $e) {
+        // Handle missing database tables gracefully
+        if (strpos($e->getMessage(), 'Database tables not initialized') !== false || 
+            strpos($e->getMessage(), "doesn't exist") !== false) {
+            $errors['general'] = 'Database tables are missing. The database schema needs to be imported. Please import the database schema file (database/hostinger-complete-schema.sql) via phpMyAdmin.';
+        } else {
+            throw $e; // Re-throw other exceptions
+        }
+    }
 
     // Check password confirmation
     if (isset($formData['password']) && isset($formData['password_confirm'])) {

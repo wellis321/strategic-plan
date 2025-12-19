@@ -148,7 +148,14 @@
                     $flashMessages = getFlashMessage();
                     if ($flashMessages):
                         foreach ($flashMessages as $type => $message):
-                            echo DesignSystem::alert($message, $type, ['class' => 'mb-4']);
+                            if ($type === 'success'):
+                                // Enhanced styling for success messages - centered and more prominent
+                                echo '<div class="flex justify-center mb-6">';
+                                echo DesignSystem::alert($message, $type, ['class' => 'mb-4 max-w-2xl w-full text-center px-6 py-4 text-lg font-semibold shadow-md']);
+                                echo '</div>';
+                            else:
+                                echo DesignSystem::alert($message, $type, ['class' => 'mb-4']);
+                            endif;
                         endforeach;
                     endif;
                     ?>
